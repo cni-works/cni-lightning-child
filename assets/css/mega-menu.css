@@ -12,6 +12,7 @@
 	.lightning-child-mega-menu-enabled {
 		--lightning-child-mega-columns: 4;
 		--lightning-child-mega-image-ratio: 16 / 9;
+		--lightning-child-mega-menu-width: 100%;
 	}
 
 	.lightning-child-mega-menu-columns-2 {
@@ -47,8 +48,9 @@
 		grid-template-columns: repeat(var(--lightning-child-mega-columns), minmax(0, 1fr));
 		gap: 24px;
 		top: calc(100% - 2px);
-		left: 0;
-		width: 100%;
+		left: 50%;
+		width: min(var(--lightning-child-mega-menu-width), calc(100vw - 32px));
+		transform: translateX(-50%);
 		max-height: 80vh;
 		margin: 0;
 		padding: 32px;

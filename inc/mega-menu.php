@@ -39,6 +39,17 @@ function lightning_child_sanitize_mega_menu_columns( $value ) {
 }
 
 /**
+ * Sanitize the desktop mega menu panel width percentage.
+ *
+ * @param mixed $value Submitted value.
+ * @return int
+ */
+function lightning_child_sanitize_mega_menu_width( $value ) {
+	$value = absint( $value );
+	return min( 100, max( 50, $value ) );
+}
+
+/**
  * Sanitize the card image ratio.
  *
  * @param mixed $value Submitted value.
@@ -202,6 +213,29 @@ function lightning_child_customize_mega_menu( $wp_customize ) {
 				2 => __( '2カラム', 'cni-lightning-child' ),
 				3 => __( '3カラム', 'cni-lightning-child' ),
 				4 => __( '4カラム', 'cni-lightning-child' ),
+			),
+		)
+	);
+
+	$wp_customize->add_setting(
+		'lightning_child_mega_menu_width',
+		array(
+			'default'           => 100,
+			'sanitize_callback' => 'lightning_child_sanitize_mega_menu_width',
+		)
+	);
+	$wp_customize->add_control(
+		'lightning_child_mega_menu_width',
+		array(
+			'type'        => 'range',
+			'settings'    => 'lightning_child_mega_menu_width',
+			'section'     => 'lightning_child_mega_menu',
+			'label'       => __( 'メガメニュー枠の横幅', 'cni-lightning-child' ),
+			'description' => __( 'カラム数とは別に、枠全体の横幅を50〜100%で指定します。枠は中央寄せで表示されます。', 'cni-lightning-child' ),
+			'input_attrs' => array(
+				'min'  => 50,
+				'max'  => 100,
+				'step' => 1,
 			),
 		)
 	);
@@ -569,6 +603,9 @@ function lightning_child_enqueue_mega_menu_styles() {
 	$title_font_size = lightning_child_sanitize_mega_menu_title_font_size(
 		get_theme_mod( 'lightning_child_mega_menu_title_font_size', 16 )
 	);
+	$menu_width = lightning_child_sanitize_mega_menu_width(
+		get_theme_mod( 'lightning_child_mega_menu_width', 100 )
+	);
 	wp_add_inline_style(
 		'lightning-child-mega-menu',
 		':root{'
@@ -577,6 +614,7 @@ function lightning_child_enqueue_mega_menu_styles() {
 		. '--lightning-child-mega-submenu-text:' . ( $submenu_text_color ? $submenu_text_color : '#111111' ) . ';'
 		. '--lightning-child-mega-submenu-toggle:' . ( $submenu_toggle_color ? $submenu_toggle_color : 'var(--vk-color-primary, #337ab7)' ) . ';'
 		. '--lightning-child-mega-title-size:' . $title_font_size . 'px;'
+		. '--lightning-child-mega-menu-width:' . $menu_width . '%;'
 		. '}'
 	);
 
