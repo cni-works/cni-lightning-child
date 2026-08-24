@@ -9,10 +9,13 @@
 }
 
 @media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
+	:root {
+		--lightning-child-mega-menu-width: 100%;
+	}
+
 	.lightning-child-mega-menu-enabled {
 		--lightning-child-mega-columns: 4;
 		--lightning-child-mega-image-ratio: 16 / 9;
-		--lightning-child-mega-menu-width: 100%;
 	}
 
 	.lightning-child-mega-menu-columns-2 {

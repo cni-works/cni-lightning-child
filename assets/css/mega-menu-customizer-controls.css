@@ -1,0 +1,7 @@
+.customize-control-lightning_child_mega_menu_width .lightning-child-customize-range-value {
+	display: inline-block;
+	min-width: 3.5em;
+	margin-left: 8px;
+	font-weight: 600;
+	vertical-align: middle;
+}

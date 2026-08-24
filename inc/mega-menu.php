@@ -371,6 +371,30 @@ function lightning_child_customize_mega_menu( $wp_customize ) {
 add_action( 'customize_register', 'lightning_child_customize_mega_menu' );
 
 /**
+ * Load the Customizer helper that displays the selected menu width.
+ *
+ * @return void
+ */
+function lightning_child_enqueue_mega_menu_customizer_controls() {
+	$style_path  = get_stylesheet_directory() . '/assets/css/mega-menu-customizer-controls.css';
+	$script_path = get_stylesheet_directory() . '/assets/js/mega-menu-customizer-controls.js';
+	wp_enqueue_style(
+		'lightning-child-mega-menu-customizer-controls',
+		get_stylesheet_directory_uri() . '/assets/css/mega-menu-customizer-controls.css',
+		array( 'customize-controls' ),
+		file_exists( $style_path ) ? filemtime( $style_path ) : null
+	);
+	wp_enqueue_script(
+		'lightning-child-mega-menu-customizer-controls',
+		get_stylesheet_directory_uri() . '/assets/js/mega-menu-customizer-controls.js',
+		array( 'customize-controls' ),
+		file_exists( $script_path ) ? filemtime( $script_path ) : null,
+		true
+	);
+}
+add_action( 'customize_controls_enqueue_scripts', 'lightning_child_enqueue_mega_menu_customizer_controls' );
+
+/**
  * Return whether the mega menu is enabled.
  *
  * @return bool
