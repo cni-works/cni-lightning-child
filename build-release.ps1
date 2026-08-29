@@ -140,6 +140,7 @@ try {
 		}
 	}
 
+	Add-Type -AssemblyName System.IO.Compression
 	Add-Type -AssemblyName System.IO.Compression.FileSystem
 	$zipArchive = [System.IO.Compression.ZipFile]::Open(
 		$zipPath,

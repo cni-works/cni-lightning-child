@@ -3,7 +3,7 @@ Theme Name: CNI Lightning Child
 Description: 無料テーマLightning（現行G3世代）用の開発・カスタマイズ子テーマ
 Author: Oishi Naoto
 Template: lightning
-Version: 0.7.5
+Version: 0.7.6
 Update URI: https://github.com/cni-works/cni-lightning-child
 Requires at least: 6.5
 Requires PHP: 7.4
@@ -278,6 +278,46 @@ h6,
 	color: var(--lightning-child-header-text, #333333);
 }
 
+/*
+ * EWWWなどが遅延読み込みでimg要素のsrcを後から書き換えても、
+ * ロゴの表示状態が戻らないよう背景画像レイヤーで切り替えます。
+ * 元のimgは寸法と代替テキストだけを保持します。
+ */
+.lightning-child-header-logo-switcher {
+	position: relative;
+	display: inline-grid;
+	vertical-align: middle;
+}
+
+.lightning-child-header-logo-switcher__reference {
+	grid-area: 1 / 1;
+	visibility: hidden;
+}
+
+.lightning-child-header-logo-switcher__layer {
+	position: absolute;
+	inset: 0;
+	grid-area: 1 / 1;
+	background-position: center;
+	background-size: contain;
+	background-repeat: no-repeat;
+	opacity: 0;
+	transition: opacity 0.22s ease;
+	pointer-events: none;
+}
+
+.lightning-child-header-logo-switcher[data-logo-state="normal"] .lightning-child-header-logo-switcher__layer--normal,
+.lightning-child-header-logo-switcher[data-logo-state="transparent"] .lightning-child-header-logo-switcher__layer--transparent,
+.lightning-child-header-logo-switcher[data-logo-state="scrolled"] .lightning-child-header-logo-switcher__layer--scrolled {
+	opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lightning-child-header-logo-switcher__layer {
+		transition: none;
+	}
+}
+
 :where(.lightning-child-block-site-header) a {
 	color: inherit;
 }
@@ -380,6 +420,13 @@ h6,
 	background-color: var(--lightning-child-header-scrolled-background, #ffffff);
 }
 
+/* レイアウトや高さは遷移させず、視覚的な変化だけを短く滑らかにします。 */
+@media (prefers-reduced-motion: no-preference) {
+	.site-header {
+		transition: background-color 0.22s ease, box-shadow 0.22s ease;
+	}
+}
+
 @media (min-width: 992px) {
 	/* 固定ナビ中央寄せ。 */
 	.header_scrolled.lightning-child-header-scroll-nav-center .site-header-container {
@@ -479,6 +526,32 @@ h6,
 .lightning-child-block-site-footer .wp-block-group,
 .lightning-child-mobile-menu-drawer .wp-block-group {
 	box-sizing: border-box;
+}
+
+/*
+ * ブロック式フッターの先頭ブロックは、Lightningの全幅計算による
+ * 外側余白を持ち込まず、フッター領域いっぱいに表示します。
+ * 背景色・背景画像・内側余白はブロック編集画面で設定した値を維持します。
+ */
+.lightning-child-block-site-footer > :is(.alignfull, [data-align="full"]) {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: none;
+	margin: 0 !important;
+}
+
+/*
+ * 編集用フッターの最外層は横幅の基準だけを担います。
+ * 上下の余白は各セクションで設定し、背景画像の前後に白帯を作りません。
+ */
+.lightning-child-block-site-footer > .lightning-child-block-footer-content {
+	padding-top: 0 !important;
+	padding-bottom: 0 !important;
+}
+
+/* ブロックエディターで残る最外層の空段落は、意図したスペーサーではありません。 */
+.lightning-child-block-site-footer > .lightning-child-block-footer-content > p:empty {
+	display: none;
 }
 
 .lightning-child-mobile-menu-drawer,

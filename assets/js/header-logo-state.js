@@ -6,50 +6,58 @@
 		if ( ! logo || typeof lightningChildHeaderLogos === 'undefined' ) {
 			return;
 		}
+		if ( logo.classList.contains( 'lightning-child-header-logo-switcher__reference' ) ) {
+			return;
+		}
 
-		const defaultLogo = logo.getAttribute( 'src' );
+		const defaultLogo = logo.getAttribute( 'data-src' ) || logo.getAttribute( 'src' );
 		if ( ! defaultLogo ) {
 			return;
 		}
-		const defaultSrcset = logo.getAttribute( 'srcset' );
-		const defaultSizes = logo.getAttribute( 'sizes' );
+		const logoLink = logo.closest( 'a' );
+		if ( ! logoLink ) {
+			return;
+		}
+		if ( ! logoLink.getAttribute( 'aria-label' ) && logo.getAttribute( 'alt' ) ) {
+			logoLink.setAttribute( 'aria-label', logo.getAttribute( 'alt' ) );
+		}
 
-		const restoreResponsiveAttributes = function () {
-			if ( defaultSrcset ) {
-				logo.setAttribute( 'srcset', defaultSrcset );
-			} else {
-				logo.removeAttribute( 'srcset' );
-			}
+		const escapeCssUrl = function ( url ) {
+			return String( url ).replace( /["\\\n\r\f]/g, '\\$&' );
+		};
+		const switcher = document.createElement( 'span' );
+		switcher.className = 'lightning-child-header-logo-switcher';
+		logo.classList.add( 'lightning-child-header-logo-switcher__reference' );
+		logo.parentNode.insertBefore( switcher, logo );
+		switcher.appendChild( logo );
 
-			if ( defaultSizes ) {
-				logo.setAttribute( 'sizes', defaultSizes );
-			} else {
-				logo.removeAttribute( 'sizes' );
-			}
+		const logoSources = {
+			normal: defaultLogo,
+			transparent: lightningChildHeaderLogos.transparent || defaultLogo,
+			scrolled: lightningChildHeaderLogos.scrolled || defaultLogo,
 		};
 
+		Object.keys( logoSources ).forEach( function ( state ) {
+			const layer = document.createElement( 'span' );
+			layer.className = 'lightning-child-header-logo-switcher__layer lightning-child-header-logo-switcher__layer--' + state;
+			layer.style.backgroundImage = 'url("' + escapeCssUrl( logoSources[ state ] ) + '")';
+			layer.setAttribute( 'aria-hidden', 'true' );
+			switcher.appendChild( layer );
+		} );
+
 		const updateLogo = function () {
-			let nextLogo = defaultLogo;
+			let nextState = 'normal';
 
 			if ( document.body.classList.contains( 'header_scrolled' ) && lightningChildHeaderLogos.scrolled ) {
-				nextLogo = lightningChildHeaderLogos.scrolled;
+				nextState = 'scrolled';
 			} else if (
 				document.body.classList.contains( 'lightning-child-transparent-header' )
 				&& lightningChildHeaderLogos.transparent
 			) {
-				nextLogo = lightningChildHeaderLogos.transparent;
+				nextState = 'transparent';
 			}
 
-			if ( logo.getAttribute( 'src' ) !== nextLogo ) {
-				logo.setAttribute( 'src', nextLogo );
-			}
-
-			if ( defaultLogo === nextLogo ) {
-				restoreResponsiveAttributes();
-			} else {
-				logo.removeAttribute( 'srcset' );
-				logo.removeAttribute( 'sizes' );
-			}
+			switcher.dataset.logoState = nextState;
 		};
 
 		new MutationObserver( updateLogo ).observe( document.body, {
