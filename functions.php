@@ -216,6 +216,7 @@ function lightning_child_get_taxonomy_archive_post_type( $taxonomy ) {
 require_once get_stylesheet_directory() . '/inc/page-visibility.php';
 require_once get_stylesheet_directory() . '/inc/footer-settings.php';
 require_once get_stylesheet_directory() . '/inc/post-display-settings.php';
+require_once get_stylesheet_directory() . '/inc/single-content-width.php';
 require_once get_stylesheet_directory() . '/inc/page-top-settings.php';
 require_once get_stylesheet_directory() . '/inc/floating-contact.php';
 require_once get_stylesheet_directory() . '/inc/font-settings.php';

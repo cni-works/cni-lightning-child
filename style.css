@@ -3,7 +3,7 @@ Theme Name: CNI Lightning Child
 Description: 無料テーマLightning（現行G3世代）用の開発・カスタマイズ子テーマ
 Author: Oishi Naoto
 Template: lightning
-Version: 0.7.6
+Version: 0.7.7
 Update URI: https://github.com/cni-works/cni-lightning-child
 Requires at least: 6.5
 Requires PHP: 7.4
@@ -11,6 +11,20 @@ Text Domain: cni-lightning-child
 */
 
 /* サイト固有のCSSは、目的ごとにコメントを付けて以下へ追加します。 */
+
+/* 投稿・カスタム投稿の1カラム個別記事を読みやすい最大幅で中央配置します。 */
+.lightning-child-single-content-width {
+	width: 100%;
+	max-width: var(--lightning-child-single-content-width, 960px);
+	margin-right: auto;
+	margin-left: auto;
+}
+
+/* Lightningの2カラム全体を大画面で広げすぎず、中央配置します。 */
+body.lightning-child-two-column-width .site-body-container {
+	--vk-width-col-2-sub: min(27svw, var(--lightning-child-two-column-sidebar-width, 389px));
+	max-width: var(--lightning-child-two-column-width, 1440px);
+}
 
 /* 場所別フォント設定。未指定の場所は本文フォントを継承します。 */
 html,
