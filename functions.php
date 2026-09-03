@@ -136,6 +136,10 @@ function lightning_child_register_github_updater() {
 }
 add_action( 'after_setup_theme', 'lightning_child_register_github_updater', 1 );
 
+if ( is_admin() ) {
+	require_once get_stylesheet_directory() . '/inc/admin/class-site-functions-onboarding.php';
+}
+
 require_once get_stylesheet_directory() . '/inc/theme-settings-migration.php';
 
 /**

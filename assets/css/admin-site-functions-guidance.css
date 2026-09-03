@@ -1,0 +1,78 @@
+.cni-site-functions-editor-host {
+	position: relative !important;
+}
+
+.cni-site-functions-editor-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	min-width: 0;
+	padding: clamp(24px, 5vw, 64px);
+	background: rgba(15, 15, 15, 0.92);
+	color: #fff;
+	text-align: center;
+	backdrop-filter: blur(2px);
+}
+
+.cni-site-functions-editor-overlay__content {
+	width: min(100%, 720px);
+}
+
+.cni-site-functions-editor-overlay__heading {
+	margin: 0 0 18px;
+	color: #fff;
+	font-size: clamp(22px, 3vw, 34px);
+	font-weight: 700;
+	line-height: 1.35;
+}
+
+.cni-site-functions-editor-overlay__description {
+	margin: 0 auto 28px;
+	color: #f0f0f1;
+	font-size: 15px;
+	line-height: 1.9;
+}
+
+.cni-site-functions-editor-overlay .button-primary {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	padding-right: 22px;
+	padding-left: 22px;
+	font-size: 15px;
+}
+
+.cni-site-functions-editor-overlay__reveal {
+	display: block;
+	margin: 18px auto 0;
+	padding: 4px;
+	border: 0;
+	background: transparent;
+	color: #c3c4c7;
+	cursor: pointer;
+	font: inherit;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.cni-site-functions-editor-overlay__reveal:hover,
+.cni-site-functions-editor-overlay__reveal:focus-visible {
+	color: #fff;
+}
+
+@media screen and (max-width: 782px) {
+	.cni-site-functions-editor-overlay {
+		align-items: flex-start;
+		overflow: auto;
+		padding: 28px 20px;
+	}
+
+	.cni-site-functions-editor-overlay__heading {
+		font-size: 22px;
+	}
+}

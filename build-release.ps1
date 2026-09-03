@@ -169,6 +169,9 @@ try {
 		$requiredEntries = @(
 			"$themeSlug/style.css",
 			"$themeSlug/functions.php",
+			"$themeSlug/assets/css/admin-site-functions-guidance.css",
+			"$themeSlug/assets/js/admin-site-functions-guidance.js",
+			"$themeSlug/inc/admin/class-site-functions-onboarding.php",
 			"$themeSlug/inc/updater/class-github-release-updater.php"
 		)
 		$validationErrors = New-Object System.Collections.Generic.List[string]

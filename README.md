@@ -171,6 +171,16 @@ cni-lightning-child/
 
 本番サイトへ直接導入せず、ローカルまたはステージング環境で確認してください。
 
+### CNI Site Functions の導入案内
+
+CNI Lightning Childが有効で、独立プラグイン `CNI Site Functions` が未導入または無効の場合、権限を持つ管理者の「ダッシュボード」「外観 / テーマ」「プラグイン一覧」に案内を表示します。サイト固有PHPは子テーマの `functions.php` へ直接追記せず、CNI Site Functionsへ分離してください。
+
+未導入時は `cni-works/CNI-Site-Functions` の最新GitHub Release Assetを検証してからインストールできます。インストールと有効化は別操作で、インストール後に自動有効化しません。旧開発版の大文字フォルダ `CNI-Site-Functions` が存在する場合は、コード重複を防ぐため正式版の自動インストールを停止して警告します。
+
+GitHub API障害、Release形式不正、Asset取得元不一致、SHA-256 digest未提供・不一致の場合は安全優先でインストールしません。CNI Site Functionsが既に有効な場合、案内は表示しません。
+
+正式版CNI Site Functionsがインストール済みのサイトでは、テーマファイルエディターでCNI Lightning Childの `functions.php` を開いた時に、サイト固有PHPの編集場所を案内します。有効時はCNI Site Functions編集画面へ、無効時はプラグイン一覧へ誘導します。他テーマや `style.css` など別ファイルの編集中には表示しません。
+
 ### 既存の Lightning Child からの移行
 
 既存サイトでは、旧 `lightning-child` フォルダを残したまま、`cni-lightning-child` を別テーマとして追加して有効化します。初回有効化時に、旧テーマのCustomizer設定とメニュー位置を新テーマへコピーします。旧 `theme_mods_lightning-child` は削除・変更しません。
