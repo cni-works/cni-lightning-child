@@ -3,7 +3,7 @@ Theme Name: CNI Lightning Child
 Description: 無料テーマLightning（現行G3世代）用の開発・カスタマイズ子テーマ
 Author: Oishi Naoto
 Template: lightning
-Version: 0.8.0
+Version: 0.8.1
 Update URI: https://github.com/cni-works/cni-lightning-child
 Requires at least: 6.5
 Requires PHP: 7.4
@@ -739,6 +739,173 @@ h6,
 		font-size: 0.64rem;
 	}
 
+	/* フローティング型。既存のフラット型とはクラスで完全に分離します。 */
+	.lightning-child-mobile-fixed-nav--floating {
+		--lightning-child-mobile-fixed-nav-indicator-size: min(48px, 13vw);
+		--lightning-child-mobile-fixed-nav-indicator-circle-size: min(58px, 15.5vw);
+		--lightning-child-mobile-fixed-nav-indicator-shell-width: clamp(152px, 45vw, 180px);
+		position: fixed;
+		overflow: visible;
+		box-shadow: none;
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__list {
+		position: relative;
+		z-index: 1;
+		overflow: visible;
+		min-height: 60px;
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__item {
+		position: relative;
+		overflow: visible;
+		isolation: isolate;
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__link {
+		position: relative;
+		z-index: 1;
+		gap: 2px;
+		height: 60px;
+		padding: 4px 2px 3px;
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__label {
+		font-size: var(--lightning-child-mobile-fixed-nav-floating-font-size, 10px);
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		-webkit-line-clamp: 1;
+		transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__item-indicator {
+		display: block;
+		position: absolute;
+		z-index: 0;
+		top: calc(var(--lightning-child-mobile-fixed-nav-indicator-size) * -0.75);
+		left: 50%;
+		box-sizing: border-box;
+		width: var(--lightning-child-mobile-fixed-nav-indicator-shell-width);
+		height: var(--lightning-child-mobile-fixed-nav-indicator-size);
+		margin-top: 6px;
+		border: 0;
+		background: transparent;
+		box-shadow: none;
+		opacity: 0;
+		pointer-events: none;
+		transform: translate3d(-50%, 4px, 0) scale(0.97);
+		transition: none;
+		will-change: opacity, transform;
+	}
+
+	/* SVGの下端をバーへ重ね、背景色がそのまませり上がる山型を作ります。 */
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__indicator-shape {
+		display: block;
+		position: absolute;
+		z-index: 0;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+		color: var(--lightning-child-mobile-fixed-nav-background, #333333);
+		stroke: none;
+	}
+
+	/* 山型の外形にだけ、ごく薄い輪郭と上方向へ広がる柔らかい影を重ねます。 */
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__indicator-edge {
+		fill: none;
+		stroke: rgba(0, 0, 0, 0.08);
+		stroke-width: 0.75;
+		filter: drop-shadow(0 -1.5px 2.5px rgba(0, 0, 0, 0.09));
+	}
+
+	/* 背景色のせり上がりより一回り小さい白い円を中央へ収めます。 */
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__item-indicator::after {
+		content: "";
+		position: absolute;
+		z-index: 1;
+		top: calc(var(--lightning-child-mobile-fixed-nav-indicator-size) * 0.5833 - 4px);
+		left: 50%;
+		width: var(--lightning-child-mobile-fixed-nav-indicator-circle-size);
+		height: var(--lightning-child-mobile-fixed-nav-indicator-circle-size);
+		border-radius: 50%;
+		background: #ffffff;
+		box-shadow: none;
+		transform: translateX(-50%);
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__item.is-indicator-active .lightning-child-mobile-fixed-nav__item-indicator {
+		opacity: 1;
+		transform: translate3d(-50%, 0, 0) scale(1);
+	}
+
+	.lightning-child-mobile-fixed-nav--floating.is-ready .lightning-child-mobile-fixed-nav__item-indicator {
+		transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__link:hover {
+		background: transparent;
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__link:focus-visible {
+		outline: 2px solid currentColor;
+		outline-offset: -3px;
+		background: rgba(255, 255, 255, 0.14);
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__item.is-current .lightning-child-mobile-fixed-nav__link {
+		color: var(--lightning-child-mobile-fixed-nav-text, #ffffff);
+		background: transparent;
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__item.is-indicator-active .lightning-child-mobile-fixed-nav__link {
+		color: var(--lightning-child-mobile-fixed-nav-background, #333333);
+		background: transparent;
+		transform: none;
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__icon {
+		position: relative;
+		z-index: 1;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1em;
+		height: 1em;
+		margin: 0;
+		line-height: 1;
+		vertical-align: middle;
+		transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__item.is-indicator-active .lightning-child-mobile-fixed-nav__icon {
+		transform: translateY(-6px);
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__item.is-indicator-active .lightning-child-mobile-fixed-nav__label {
+		transform: translateY(-8px);
+	}
+
+	/* Font AwesomeのHOME系グリフ内にある下側余白だけを視覚補正します。 */
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__item.is-indicator-active .lightning-child-mobile-fixed-nav__icon:is(.fa-home, .fa-house, .fa-house-chimney) + .lightning-child-mobile-fixed-nav__label {
+		transform: translateY(-9px);
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__item.is-action-feedback .lightning-child-mobile-fixed-nav__link {
+		color: var(--lightning-child-mobile-fixed-nav-text, #ffffff);
+		background: rgba(255, 255, 255, 0.16);
+	}
+
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__item.is-action-feedback .lightning-child-mobile-fixed-nav__icon {
+		transform: translateY(-2px) scale(1.05);
+	}
+
+	/* ハンバーガーはページ選択ではなく、既存の開閉状態表示を維持します。 */
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__menu-button.is-open {
+		color: var(--lightning-child-mobile-fixed-nav-active-text, #ffffff);
+		background: var(--lightning-child-mobile-fixed-nav-active-background, #1a1a1a);
+	}
+
 	body.lightning-child-mobile-fixed-nav-has-menu.lightning-child-mobile-menu-drawer-ready > #vk-mobile-nav-menu-btn {
 		display: none;
 	}
@@ -856,6 +1023,13 @@ h6,
 }
 
 @media (max-width: 991px) and (prefers-reduced-motion: reduce) {
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__item-indicator,
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__icon,
+	.lightning-child-mobile-fixed-nav--floating .lightning-child-mobile-fixed-nav__label {
+		transition: none;
+		animation: none;
+	}
+
 	body.lightning-child-mobile-menu-drawer-ready .lightning-child-mobile-menu-drawer:is(.is-open, .is-closing),
 	.lightning-child-mobile-menu-drawer-backdrop {
 		transition: none;

@@ -182,9 +182,124 @@
 		syncViewport();
 	}
 
-	if ( 'loading' === document.readyState ) {
-		document.addEventListener( 'DOMContentLoaded', initializeMobileMenuDrawer );
-	} else {
+	function initializeFloatingMobileNav() {
+		const nav = document.querySelector( '.lightning-child-mobile-fixed-nav--floating' );
+		let activeItem = nav ? nav.querySelector( '.lightning-child-mobile-fixed-nav__item.is-current' ) : null;
+		let feedbackItem = null;
+		let feedbackTimer = null;
+		let readyScheduled = false;
+
+		if ( ! nav ) {
+			return;
+		}
+
+		function requestNextFrame( callback ) {
+			if ( 'function' === typeof window.requestAnimationFrame ) {
+				window.requestAnimationFrame( callback );
+				return;
+			}
+
+			window.setTimeout( callback, 0 );
+		}
+
+		function scheduleReadyState() {
+			if ( readyScheduled || nav.classList.contains( 'is-ready' ) ) {
+				return;
+			}
+
+			readyScheduled = true;
+			requestNextFrame( function () {
+				requestNextFrame( function () {
+					nav.classList.add( 'is-ready' );
+					readyScheduled = false;
+				} );
+			} );
+		}
+
+		function activateItem( item ) {
+			nav.querySelectorAll( '.lightning-child-mobile-fixed-nav__item.is-indicator-active' ).forEach( function ( currentItem ) {
+				currentItem.classList.remove( 'is-indicator-active' );
+			} );
+
+			if ( ! item ) {
+				activeItem = null;
+				return;
+			}
+
+			item.classList.add( 'is-indicator-active' );
+			activeItem = item;
+			scheduleReadyState();
+		}
+
+		function getLinkAction( link ) {
+			const href = ( link.getAttribute( 'href' ) || '' ).trim();
+			if ( ! href || '#' === href.charAt( 0 ) || link.classList.contains( 'lightning-child-mobile-fixed-nav__menu-button' ) ) {
+				return 'none';
+			}
+
+			if ( /^(?:tel|mailto|sms):/i.test( href ) ) {
+				return 'feedback';
+			}
+
+			let targetUrl;
+			try {
+				targetUrl = new window.URL( link.href, window.location.href );
+			} catch ( error ) {
+				return 'none';
+			}
+
+			if ( ! /^https?:$/.test( targetUrl.protocol ) ) {
+				return 'none';
+			}
+
+			return targetUrl.origin === window.location.origin ? 'internal' : 'feedback';
+		}
+
+		function showActionFeedback( item ) {
+			if ( feedbackTimer ) {
+				window.clearTimeout( feedbackTimer );
+			}
+			if ( feedbackItem ) {
+				feedbackItem.classList.remove( 'is-action-feedback' );
+			}
+
+			feedbackItem = item;
+			feedbackItem.classList.add( 'is-action-feedback' );
+			feedbackTimer = window.setTimeout( function () {
+				if ( feedbackItem ) {
+					feedbackItem.classList.remove( 'is-action-feedback' );
+				}
+				feedbackItem = null;
+				feedbackTimer = null;
+			}, 1000 );
+		}
+
+		nav.addEventListener( 'click', function ( event ) {
+			const link = event.target.closest( '.lightning-child-mobile-fixed-nav__link' );
+			if ( ! link || ! nav.contains( link ) ) {
+				return;
+			}
+
+			const item = link.closest( '.lightning-child-mobile-fixed-nav__item' );
+			const action = getLinkAction( link );
+			if ( 'internal' === action ) {
+				activateItem( item );
+			} else if ( 'feedback' === action ) {
+				showActionFeedback( item );
+			}
+		} );
+
+		activateItem( activeItem );
+	}
+
+	function initializeMobileFixedNav() {
 		initializeMobileMenuDrawer();
+		initializeFloatingMobileNav();
+	}
+
+	if ( 'loading' === document.readyState ) {
+		document.addEventListener( 'DOMContentLoaded', initializeMobileFixedNav );
+	} else {
+		initializeMobileFixedNav();
 	}
 }() );

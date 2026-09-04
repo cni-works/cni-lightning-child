@@ -37,6 +37,27 @@ function lightning_child_sanitize_mobile_fixed_nav_url( $value ) {
 }
 
 /**
+ * Sanitize the mobile fixed navigation display style.
+ *
+ * @param mixed $value Submitted value.
+ * @return string
+ */
+function lightning_child_sanitize_mobile_fixed_nav_style( $value ) {
+	return is_string( $value ) && in_array( $value, array( 'flat', 'floating' ), true ) ? $value : 'flat';
+}
+
+/**
+ * Sanitize the label font size used inside the floating indicator.
+ *
+ * @param mixed $value Submitted value.
+ * @return int
+ */
+function lightning_child_sanitize_mobile_fixed_nav_floating_font_size( $value ) {
+	$font_size = is_numeric( $value ) ? (int) $value : 10;
+	return min( 12, max( 8, $font_size ) );
+}
+
+/**
  * Sanitize the content source used by the hamburger drawer.
  *
  * @param mixed $value Submitted value.
@@ -165,6 +186,48 @@ function lightning_child_customize_mobile_fixed_nav( $wp_customize ) {
 			'label'   => __( 'モバイル固定ナビを表示する', 'cni-lightning-child' ),
 			'section' => $section_id,
 			'type'    => 'checkbox',
+		)
+	);
+
+	$wp_customize->add_setting(
+		'lightning_child_mobile_fixed_nav_style',
+		array(
+			'default'           => 'flat',
+			'sanitize_callback' => 'lightning_child_sanitize_mobile_fixed_nav_style',
+		)
+	);
+	$wp_customize->add_control(
+		'lightning_child_mobile_fixed_nav_style',
+		array(
+			'label'   => __( '下部メニュースタイル', 'cni-lightning-child' ),
+			'section' => $section_id,
+			'type'    => 'radio',
+			'choices' => array(
+				'flat'     => __( 'フラット', 'cni-lightning-child' ),
+				'floating' => __( 'フローティング', 'cni-lightning-child' ),
+			),
+		)
+	);
+
+	$wp_customize->add_setting(
+		'lightning_child_mobile_fixed_nav_floating_font_size',
+		array(
+			'default'           => 10,
+			'sanitize_callback' => 'lightning_child_sanitize_mobile_fixed_nav_floating_font_size',
+		)
+	);
+	$wp_customize->add_control(
+		'lightning_child_mobile_fixed_nav_floating_font_size',
+		array(
+			'label'       => __( 'フローティング型のメニュー文字サイズ', 'cni-lightning-child' ),
+			'description' => __( '白い円の中へ表示します。フローティング型では短いメニュー名を推奨します。', 'cni-lightning-child' ),
+			'section'     => $section_id,
+			'type'        => 'range',
+			'input_attrs' => array(
+				'min'  => 8,
+				'max'  => 12,
+				'step' => 1,
+			),
 		)
 	);
 
@@ -444,6 +507,28 @@ function lightning_child_is_mobile_fixed_nav_enabled() {
 }
 
 /**
+ * Return the selected mobile fixed navigation display style.
+ *
+ * @return string
+ */
+function lightning_child_get_mobile_fixed_nav_style() {
+	return lightning_child_sanitize_mobile_fixed_nav_style(
+		get_theme_mod( 'lightning_child_mobile_fixed_nav_style', 'flat' )
+	);
+}
+
+/**
+ * Return the label font size used inside the floating indicator.
+ *
+ * @return int
+ */
+function lightning_child_get_mobile_fixed_nav_floating_font_size() {
+	return lightning_child_sanitize_mobile_fixed_nav_floating_font_size(
+		get_theme_mod( 'lightning_child_mobile_fixed_nav_floating_font_size', 10 )
+	);
+}
+
+/**
  * Return the renderable content selected for the hamburger drawer.
  *
  * @return array<string, mixed>
@@ -659,8 +744,16 @@ function lightning_child_render_mobile_fixed_nav() {
 
 	$total_items = count( $items ) + ( $show_menu ? 1 : 0 );
 	$menu_source = $show_menu ? lightning_child_get_mobile_menu_content_source() : array();
+	$nav_style   = lightning_child_get_mobile_fixed_nav_style();
+	$nav_classes = array(
+		'lightning-child-mobile-fixed-nav',
+		'lightning-child-mobile-fixed-nav--' . $nav_style,
+	);
+	if ( 6 <= $total_items ) {
+		$nav_classes[] = 'lightning-child-mobile-fixed-nav--compact';
+	}
 	?>
-	<nav class="lightning-child-mobile-fixed-nav<?php echo 6 <= $total_items ? ' lightning-child-mobile-fixed-nav--compact' : ''; ?>" aria-label="<?php esc_attr_e( 'モバイル固定ナビ', 'cni-lightning-child' ); ?>" style="--lightning-child-mobile-fixed-nav-items:<?php echo esc_attr( $total_items ); ?>">
+	<nav class="<?php echo esc_attr( implode( ' ', $nav_classes ) ); ?>" aria-label="<?php esc_attr_e( 'モバイル固定ナビ', 'cni-lightning-child' ); ?>" style="--lightning-child-mobile-fixed-nav-items:<?php echo esc_attr( $total_items ); ?>">
 		<ul class="lightning-child-mobile-fixed-nav__list">
 			<?php if ( $show_menu ) : ?>
 				<li class="lightning-child-mobile-fixed-nav__item">
@@ -683,6 +776,14 @@ function lightning_child_render_mobile_fixed_nav() {
 						<?php lightning_child_the_mobile_fixed_nav_icon( $item['icon'] ); ?>
 						<span class="lightning-child-mobile-fixed-nav__label"><?php echo esc_html( $item['label'] ); ?></span>
 					</a>
+					<?php if ( 'floating' === $nav_style ) : ?>
+						<span class="lightning-child-mobile-fixed-nav__item-indicator" aria-hidden="true">
+							<svg class="lightning-child-mobile-fixed-nav__indicator-shape" viewBox="0 0 220 64" preserveAspectRatio="none" focusable="false" aria-hidden="true">
+								<path fill="currentColor" d="M0 64V40C12 40 20 40 28 39C55 38 69 33 82 26C96 17 124 17 138 26C151 33 165 38 192 39C200 40 208 40 220 40V64Z"></path>
+								<path class="lightning-child-mobile-fixed-nav__indicator-edge" d="M0 40C12 40 20 40 28 39C55 38 69 33 82 26C96 17 124 17 138 26C151 33 165 38 192 39C200 40 208 40 220 40" vector-effect="non-scaling-stroke"></path>
+							</svg>
+						</span>
+					<?php endif; ?>
 				</li>
 			<?php endforeach; ?>
 		</ul>
@@ -726,14 +827,15 @@ function lightning_child_add_mobile_fixed_nav_css() {
 	}
 
 	$css = sprintf(
-		':root{--lightning-child-mobile-fixed-nav-background:%1$s;--lightning-child-mobile-fixed-nav-text:%2$s;--lightning-child-mobile-fixed-nav-active-background:%3$s;--lightning-child-mobile-fixed-nav-active-text:%4$s;--lightning-child-mobile-fixed-nav-border:%5$s;--lightning-child-mobile-menu-drawer-background:%6$s;--lightning-child-mobile-menu-drawer-text:%7$s;}',
+		':root{--lightning-child-mobile-fixed-nav-background:%1$s;--lightning-child-mobile-fixed-nav-text:%2$s;--lightning-child-mobile-fixed-nav-active-background:%3$s;--lightning-child-mobile-fixed-nav-active-text:%4$s;--lightning-child-mobile-fixed-nav-border:%5$s;--lightning-child-mobile-menu-drawer-background:%6$s;--lightning-child-mobile-menu-drawer-text:%7$s;--lightning-child-mobile-fixed-nav-floating-font-size:%8$dpx;}',
 		lightning_child_get_mobile_fixed_nav_color( 'lightning_child_mobile_fixed_nav_background_color', '#333333' ),
 		lightning_child_get_mobile_fixed_nav_color( 'lightning_child_mobile_fixed_nav_text_color', '#ffffff' ),
 		lightning_child_get_mobile_fixed_nav_color( 'lightning_child_mobile_fixed_nav_active_background_color', '#1a1a1a' ),
 		lightning_child_get_mobile_fixed_nav_color( 'lightning_child_mobile_fixed_nav_active_text_color', '#ffffff' ),
 		lightning_child_get_mobile_fixed_nav_color( 'lightning_child_mobile_fixed_nav_border_color', '#555555' ),
 		lightning_child_get_mobile_fixed_nav_color( 'lightning_child_mobile_menu_drawer_background_color', '#ffffff' ),
-		lightning_child_get_mobile_fixed_nav_color( 'lightning_child_mobile_menu_drawer_text_color', '#333333' )
+		lightning_child_get_mobile_fixed_nav_color( 'lightning_child_mobile_menu_drawer_text_color', '#333333' ),
+		lightning_child_get_mobile_fixed_nav_floating_font_size()
 	);
 
 	wp_add_inline_style( 'lightning-theme-style', $css );
@@ -747,7 +849,7 @@ add_action( 'wp_enqueue_scripts', 'lightning_child_add_mobile_fixed_nav_css', 20
  */
 function lightning_child_enqueue_mobile_fixed_nav_script() {
 	if ( ! lightning_child_is_mobile_fixed_nav_enabled()
-		|| ! lightning_child_should_show_mobile_menu() ) {
+		|| ( ! lightning_child_should_show_mobile_menu() && 'floating' !== lightning_child_get_mobile_fixed_nav_style() ) ) {
 		return;
 	}
 
