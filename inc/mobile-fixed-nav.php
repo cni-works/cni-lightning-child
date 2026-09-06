@@ -749,6 +749,10 @@ function lightning_child_render_mobile_fixed_nav() {
 		'lightning-child-mobile-fixed-nav',
 		'lightning-child-mobile-fixed-nav--' . $nav_style,
 	);
+	$drawer_classes = array( 'lightning-child-mobile-menu-drawer' );
+	if ( 'footer' === ( $menu_source['type'] ?? '' ) ) {
+		$drawer_classes[] = 'lightning-child-mobile-menu-drawer--source-footer';
+	}
 	if ( 6 <= $total_items ) {
 		$nav_classes[] = 'lightning-child-mobile-fixed-nav--compact';
 	}
@@ -780,7 +784,6 @@ function lightning_child_render_mobile_fixed_nav() {
 						<span class="lightning-child-mobile-fixed-nav__item-indicator" aria-hidden="true">
 							<svg class="lightning-child-mobile-fixed-nav__indicator-shape" viewBox="0 0 220 64" preserveAspectRatio="none" focusable="false" aria-hidden="true">
 								<path fill="currentColor" d="M0 64V40C12 40 20 40 28 39C55 38 69 33 82 26C96 17 124 17 138 26C151 33 165 38 192 39C200 40 208 40 220 40V64Z"></path>
-								<path class="lightning-child-mobile-fixed-nav__indicator-edge" d="M0 40C12 40 20 40 28 39C55 38 69 33 82 26C96 17 124 17 138 26C151 33 165 38 192 39C200 40 208 40 220 40" vector-effect="non-scaling-stroke"></path>
 							</svg>
 						</span>
 					<?php endif; ?>
@@ -789,7 +792,7 @@ function lightning_child_render_mobile_fixed_nav() {
 		</ul>
 	</nav>
 	<?php if ( $show_menu ) : ?>
-		<aside id="lightning-child-mobile-menu-drawer" class="lightning-child-mobile-menu-drawer" aria-label="<?php esc_attr_e( 'ハンバーガーメニュー', 'cni-lightning-child' ); ?>">
+		<aside id="lightning-child-mobile-menu-drawer" class="<?php echo esc_attr( implode( ' ', $drawer_classes ) ); ?>" aria-label="<?php esc_attr_e( 'ハンバーガーメニュー', 'cni-lightning-child' ); ?>">
 			<button class="lightning-child-mobile-menu-drawer__close" type="button" data-lightning-child-menu-close>
 				<span aria-hidden="true">&times;</span>
 				<span class="screen-reader-text"><?php esc_html_e( 'メニューを閉じる', 'cni-lightning-child' ); ?></span>
