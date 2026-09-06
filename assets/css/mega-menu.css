@@ -72,8 +72,6 @@
 			visibility 0s linear 140ms;
 	}
 
-	.lightning-child-mega-menu-enabled .global-nav-list > .lightning-child-mega-menu-parent:hover > .sub-menu,
-	.lightning-child-mega-menu-enabled .global-nav-list > .lightning-child-mega-menu-parent:focus-within > .sub-menu,
 	.lightning-child-mega-menu-enabled .global-nav-list > .lightning-child-mega-menu-parent.is-mega-menu-open > .sub-menu {
 		visibility: visible;
 		opacity: 1;
