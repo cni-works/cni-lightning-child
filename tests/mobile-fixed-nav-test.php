@@ -75,8 +75,38 @@ cni_mobile_nav_assert(
 	false !== strpos( $source, "'floating' !== lightning_child_get_mobile_fixed_nav_style()" ),
 	'The script loader must support floating navigation without a hamburger drawer.'
 );
+cni_mobile_nav_assert(
+	false !== strpos( $source, "lightning-child-mobile-menu-drawer--source-footer" )
+	&& false !== strpos( $source, "'footer' === ( \$menu_source['type'] ?? '' )" ),
+	'The drawer must expose a footer-source class without affecting pattern content.'
+);
 
 $css = file_get_contents( dirname( __DIR__ ) . '/style.css' );
+cni_mobile_nav_assert(
+	1 === preg_match( '/\.lightning-child-mobile-fixed-nav__icon\s*\{[^}]*margin:\s*0;/s', $css ),
+	'Fixed navigation icons must reset generic theme margins in both flat and floating styles.'
+);
+cni_mobile_nav_assert(
+	false === strpos( $css, 'isolation: isolate;' )
+	&& 1 === preg_match( '/\.lightning-child-mobile-fixed-nav--floating \.lightning-child-mobile-fixed-nav__link\s*\{[^}]*z-index:\s*1;/s', $css )
+	&& 1 === preg_match( '/\.lightning-child-mobile-fixed-nav--floating \.lightning-child-mobile-fixed-nav__item-indicator\s*\{[^}]*z-index:\s*0;/s', $css ),
+	'All navigation links must share a layer above the wide floating indicator, including adjacent items.'
+);
+cni_mobile_nav_assert(
+	false !== strpos( $css, '.lightning-child-mobile-menu-drawer--source-footer .lightning-child-mobile-menu-drawer__content' )
+	&& false !== strpos( $css, '--wp--style--global--content-size: 100%;' )
+	&& false !== strpos( $css, '--wp--style--global--wide-size: 100%;' )
+	&& false !== strpos( $css, 'padding-right: 0 !important;' )
+	&& false !== strpos( $css, 'padding-left: 0 !important;' ),
+	'Footer template content must fill the drawer without inherited site-wide outer padding.'
+);
+cni_mobile_nav_assert(
+	false !== strpos( $css, '--lightning-child-mobile-menu-drawer-width: min(100vw, 420px);' )
+	&& false !== strpos( $css, 'body.lightning-child-mobile-menu-drawer-open .lightning-child-mobile-fixed-nav' )
+	&& false !== strpos( $css, 'z-index: 10030;' )
+	&& false !== strpos( $css, 'padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));' ),
+	'The drawer must use the full phone viewport while the fixed navigation remains visible above it.'
+);
 cni_mobile_nav_assert(
 	false !== strpos( $source, 'lightning-child-mobile-fixed-nav__indicator-shape' )
 	&& false !== strpos( $source, 'preserveAspectRatio="none"' ),
@@ -88,10 +118,13 @@ cni_mobile_nav_assert(
 	'The raised shape baseline and broad rounded arch must match the approved geometry.'
 );
 cni_mobile_nav_assert(
-	false !== strpos( $source, 'lightning-child-mobile-fixed-nav__indicator-edge' )
-	&& false !== strpos( $css, 'stroke-width: 0.75;' )
-	&& false !== strpos( $css, 'drop-shadow(0 -1.5px 2.5px rgba(0, 0, 0, 0.09))' ),
-	'The completed arch must use only one subtle shadow along its upper contour.'
+	false === strpos( $source, 'lightning-child-mobile-fixed-nav__indicator-edge' )
+	&& false === strpos( $css, 'drop-shadow(' ),
+	'The floating indicator must not include the rejected contour shadow.'
+);
+cni_mobile_nav_assert(
+	1 === preg_match( '/\.lightning-child-mobile-fixed-nav--floating\s*\{[^}]*border-top:\s*0;/s', $css ),
+	'The floating navigation must remove the inherited top border.'
 );
 cni_mobile_nav_assert(
 	false === strpos( $source, 'lightning-child-mobile-fixed-nav__indicator-icon' )
