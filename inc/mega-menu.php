@@ -24,7 +24,7 @@ function lightning_child_sanitize_mega_menu_activation( $value ) {
  * @return string
  */
 function lightning_child_sanitize_mega_menu_layout( $value ) {
-	return 'links' === $value ? 'links' : 'cards';
+	return in_array( $value, array( 'cards', 'links', 'categories' ), true ) ? $value : 'cards';
 }
 
 /**
@@ -171,6 +171,7 @@ function lightning_child_customize_mega_menu( $wp_customize ) {
 			'choices'  => array(
 				'cards' => __( '画像カード（アイキャッチ＋タイトル）', 'cni-lightning-child' ),
 				'links' => __( 'タイトル＋矢印', 'cni-lightning-child' ),
+				'categories' => __( 'カテゴリ型（見出し＋一覧）', 'cni-lightning-child' ),
 			),
 		)
 	);
@@ -193,6 +194,19 @@ function lightning_child_customize_mega_menu( $wp_customize ) {
 			)
 		)
 	);
+
+	foreach (
+		array(
+			'category_accent_color'  => __( 'カテゴリ型：アクセント・アイコン色', 'cni-lightning-child' ),
+			'category_icon_bg_color' => __( 'カテゴリ型：アイコン背景色', 'cni-lightning-child' ),
+			'category_heading_color' => __( 'カテゴリ型：見出し色', 'cni-lightning-child' ),
+			'category_link_color'    => __( 'カテゴリ型：リンク色', 'cni-lightning-child' ),
+			'category_border_color'  => __( 'カテゴリ型：区切り線色', 'cni-lightning-child' ),
+		) as $setting => $label
+	) {
+		$wp_customize->add_setting( 'lightning_child_mega_menu_' . $setting, array( 'default' => '', 'sanitize_callback' => 'lightning_child_sanitize_mega_menu_optional_color' ) );
+		$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'lightning_child_mega_menu_' . $setting, array( 'label' => $label, 'description' => __( '未指定の場合はテーマのキーカラーまたは標準色を使用します。', 'cni-lightning-child' ), 'settings' => 'lightning_child_mega_menu_' . $setting, 'section' => 'lightning_child_mega_menu' ) ) );
+	}
 
 	$wp_customize->add_setting(
 		'lightning_child_mega_menu_columns',
@@ -457,7 +471,8 @@ function lightning_child_prepare_mega_menu_items( $items, $args ) {
 			continue;
 		}
 
-		$item->classes = array_values( array_unique( array_merge( $item_classes, array( 'lightning-child-mega-menu-parent' ) ) ) );
+		$layout = lightning_child_get_mega_menu_parent_layout( $item->ID );
+		$item->classes = array_values( array_unique( array_merge( $item_classes, array( 'lightning-child-mega-menu-parent', 'lightning-child-mega-menu-parent--' . $layout ) ) ) );
 		$active_parent_ids[ $item->ID ] = true;
 	}
 
@@ -485,6 +500,30 @@ function lightning_child_prepare_mega_menu_items( $items, $args ) {
 	return $items;
 }
 add_filter( 'wp_nav_menu_objects', 'lightning_child_prepare_mega_menu_items', 20, 2 );
+
+function lightning_child_get_mega_menu_parent_layout( $item_id ) {
+	$layout = get_post_meta( absint( $item_id ), '_lightning_child_mega_menu_layout', true );
+	return 'inherit' === $layout || '' === $layout ? lightning_child_sanitize_mega_menu_layout( get_theme_mod( 'lightning_child_mega_menu_layout', 'cards' ) ) : lightning_child_sanitize_mega_menu_layout( $layout );
+}
+
+function lightning_child_mega_menu_item_fields( $item_id, $item, $depth ) {
+	if ( 0 === (int) $depth ) {
+		$layout = get_post_meta( $item_id, '_lightning_child_mega_menu_layout', true );
+		echo '<p class="description description-wide"><label>' . esc_html__( 'CNI メガメニュー：表示形式', 'cni-lightning-child' ) . '<select name="lightning_child_mega_menu_item[' . absint( $item_id ) . '][layout]">';
+		foreach ( array( 'inherit' => __( '共通設定を使用', 'cni-lightning-child' ), 'cards' => __( '画像カード', 'cni-lightning-child' ), 'links' => __( 'タイトル一覧', 'cni-lightning-child' ), 'categories' => __( 'カテゴリ型', 'cni-lightning-child' ) ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '"' . selected( $layout, $value, false ) . '>' . esc_html( $label ) . '</option>'; }
+		echo '</select></label></p>';
+		foreach ( array( 'eyebrow' => __( 'カテゴリ型：英語ラベル', 'cni-lightning-child' ), 'description' => __( 'カテゴリ型：説明文', 'cni-lightning-child' ), 'cta_text' => __( 'カテゴリ型：CTA文言', 'cni-lightning-child' ), 'cta_url' => __( 'カテゴリ型：CTA URL', 'cni-lightning-child' ) ) as $key => $label ) { echo '<p class="description description-wide"><label>' . esc_html( $label ) . '<input class="widefat" type="text" name="lightning_child_mega_menu_item[' . absint( $item_id ) . '][' . esc_attr( $key ) . ']" value="' . esc_attr( get_post_meta( $item_id, '_lightning_child_mega_menu_' . $key, true ) ) . '"></label></p>'; }
+	}
+	if ( 1 === (int) $depth ) { echo '<p class="description description-wide"><label>' . esc_html__( 'CNI メガメニュー：カテゴリアイコン（Font Awesome class）', 'cni-lightning-child' ) . '<input class="widefat" type="text" name="lightning_child_mega_menu_item[' . absint( $item_id ) . '][icon]" value="' . esc_attr( get_post_meta( $item_id, '_lightning_child_mega_menu_icon', true ) ) . '" placeholder="fas fa-users"></label></p>'; }
+}
+add_action( 'wp_nav_menu_item_custom_fields', 'lightning_child_mega_menu_item_fields', 10, 3 );
+
+function lightning_child_save_mega_menu_item_fields( $menu_id, $menu_item_db_id ) {
+	if ( ! current_user_can( 'edit_theme_options' ) || empty( $_POST['lightning_child_mega_menu_item'][ $menu_item_db_id ] ) ) { return; }
+	$values = wp_unslash( $_POST['lightning_child_mega_menu_item'][ $menu_item_db_id ] );
+	foreach ( array( 'layout', 'eyebrow', 'description', 'cta_text', 'cta_url', 'icon' ) as $key ) { if ( array_key_exists( $key, $values ) ) { update_post_meta( $menu_item_db_id, '_lightning_child_mega_menu_' . $key, 'layout' === $key ? ( 'inherit' === $values[ $key ] ? 'inherit' : lightning_child_sanitize_mega_menu_layout( $values[ $key ] ) ) : ( 'cta_url' === $key ? esc_url_raw( $values[ $key ] ) : sanitize_text_field( $values[ $key ] ) ) ); } }
+}
+add_action( 'wp_update_nav_menu_item', 'lightning_child_save_mega_menu_item_fields', 10, 2 );
 
 /**
  * Use the linked content title for a card or link item.
@@ -526,9 +565,17 @@ function lightning_child_render_mega_menu_item( $item_output, $item, $depth, $ar
 	}
 
 	$title  = lightning_child_get_mega_menu_item_title( $item, $matches[2] );
-	$layout = lightning_child_sanitize_mega_menu_layout(
-		get_theme_mod( 'lightning_child_mega_menu_layout', 'cards' )
-	);
+	$layout = lightning_child_get_mega_menu_parent_layout( $item->menu_item_parent );
+	if ( 'categories' === $layout && in_array( 'lightning-child-mega-menu-item-has-children', (array) $item->classes, true ) ) {
+		$icon = ' ' . get_post_meta( $item->ID, '_lightning_child_mega_menu_icon', true );
+		foreach ( (array) $item->classes as $class ) {
+			if ( 0 === strpos( $class, 'fa-' ) || 0 === strpos( $class, 'fas' ) || 0 === strpos( $class, 'far' ) || 0 === strpos( $class, 'fab' ) ) {
+				$icon .= ' ' . sanitize_html_class( $class );
+			}
+		}
+		$icon_html = trim( $icon ) ? '<span class="lightning-child-mega-menu__category-icon" aria-hidden="true"><i class="' . esc_attr( trim( $icon ) ) . '"></i></span>' : '';
+		return $matches[1] . '<span class="lightning-child-mega-menu__category-title">' . $icon_html . '<span>' . $title . '</span></span>' . $matches[3];
+	}
 	$media  = '';
 
 	if ( 'cards' === $layout ) {
@@ -559,6 +606,15 @@ function lightning_child_render_mega_menu_item( $item_output, $item, $depth, $ar
 	return $matches[1] . $content . $matches[3];
 }
 add_filter( 'walker_nav_menu_start_el', 'lightning_child_render_mega_menu_item', 20, 4 );
+
+class Lightning_Child_Mega_Menu_Walker extends Walker_Nav_Menu {
+	private $category_parent = null;
+	public function display_element( $element, &$children_elements, $max_depth, $depth, $args, &$output ) { $is_category = 0 === (int) $depth && in_array( 'lightning-child-mega-menu-parent--categories', (array) $element->classes, true ); if ( $is_category ) { $this->category_parent = $element; } parent::display_element( $element, $children_elements, $max_depth, $depth, $args, $output ); if ( $is_category ) { $this->category_parent = null; } }
+	public function start_lvl( &$output, $depth = 0, $args = null ) { parent::start_lvl( $output, $depth, $args ); if ( 0 !== (int) $depth || ! $this->category_parent ) { return; } $id = $this->category_parent->ID; $eyebrow = get_post_meta( $id, '_lightning_child_mega_menu_eyebrow', true ); $description = get_post_meta( $id, '_lightning_child_mega_menu_description', true ); $cta_text = get_post_meta( $id, '_lightning_child_mega_menu_cta_text', true ); $cta_url = get_post_meta( $id, '_lightning_child_mega_menu_cta_url', true ); $output .= '<li class="lightning-child-mega-menu__intro">' . ( $eyebrow ? '<span class="lightning-child-mega-menu__intro-eyebrow">' . esc_html( $eyebrow ) . '</span>' : '' ) . '<span class="lightning-child-mega-menu__intro-title">' . esc_html( $this->category_parent->title ) . '</span>' . ( $description ? '<p>' . esc_html( $description ) . '</p>' : '' ) . ( $cta_text && $cta_url ? '<a class="lightning-child-mega-menu__intro-cta" href="' . esc_url( $cta_url ) . '">' . esc_html( $cta_text ) . ' <span aria-hidden="true">→</span></a>' : '' ) . '</li>'; }
+}
+
+function lightning_child_use_mega_menu_walker( $args ) { if ( lightning_child_is_mega_menu_enabled() && lightning_child_is_header_global_menu( (object) $args ) && empty( $args['walker'] ) ) { $args['walker'] = new Lightning_Child_Mega_Menu_Walker(); } return $args; }
+add_filter( 'wp_nav_menu_args', 'lightning_child_use_mega_menu_walker', 20 );
 
 /**
  * Add state classes used by the mega menu stylesheet.
@@ -630,6 +686,12 @@ function lightning_child_enqueue_mega_menu_styles() {
 	$menu_width = lightning_child_sanitize_mega_menu_width(
 		get_theme_mod( 'lightning_child_mega_menu_width', 100 )
 	);
+	$category_colors = array();
+	foreach ( array( 'accent', 'icon_bg', 'heading', 'link', 'border' ) as $color ) {
+		$category_colors[ $color ] = lightning_child_sanitize_mega_menu_optional_color(
+			get_theme_mod( 'lightning_child_mega_menu_category_' . $color . '_color', '' )
+		);
+	}
 	wp_add_inline_style(
 		'lightning-child-mega-menu',
 		':root{'
@@ -639,6 +701,11 @@ function lightning_child_enqueue_mega_menu_styles() {
 		. '--lightning-child-mega-submenu-toggle:' . ( $submenu_toggle_color ? $submenu_toggle_color : 'var(--vk-color-primary, #337ab7)' ) . ';'
 		. '--lightning-child-mega-title-size:' . $title_font_size . 'px;'
 		. '--lightning-child-mega-menu-width:' . $menu_width . '%;'
+		. '--lightning-child-mega-category-accent:' . ( $category_colors['accent'] ? $category_colors['accent'] : 'var(--vk-color-primary, #337ab7)' ) . ';'
+		. '--lightning-child-mega-category-icon-bg:' . ( $category_colors['icon_bg'] ? $category_colors['icon_bg'] : 'color-mix(in srgb, var(--lightning-child-mega-category-accent) 12%, transparent)' ) . ';'
+		. '--lightning-child-mega-category-heading:' . ( $category_colors['heading'] ? $category_colors['heading'] : '#111111' ) . ';'
+		. '--lightning-child-mega-category-link:' . ( $category_colors['link'] ? $category_colors['link'] : '#1f2933' ) . ';'
+		. '--lightning-child-mega-category-border:' . ( $category_colors['border'] ? $category_colors['border'] : '#e2e8ed' ) . ';'
 		. '}'
 	);
 

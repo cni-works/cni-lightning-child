@@ -3,7 +3,7 @@ Theme Name: CNI Lightning Child
 Description: 無料テーマLightning（現行G3世代）用の開発・カスタマイズ子テーマ
 Author: Oishi Naoto
 Template: lightning
-Version: 0.8.2
+Version: 1.0.0
 Update URI: https://github.com/cni-works/cni-lightning-child
 Requires at least: 6.5
 Requires PHP: 7.4
@@ -24,6 +24,56 @@ Text Domain: cni-lightning-child
 body.lightning-child-two-column-width .site-body-container {
 	--vk-width-col-2-sub: min(27svw, var(--lightning-child-two-column-sidebar-width, 389px));
 	max-width: var(--lightning-child-two-column-width, 1440px);
+}
+
+/* 指定時はLightning標準の比率ではなく、本文とサイドバーの間隔を明示します。 */
+@media (min-width: 992px) {
+	body.lightning-child-two-column-sidebar-gap .site-body-container {
+		--vk-width-col-2-main: calc(100% - var(--vk-width-col-2-sub) - var(--lightning-child-two-column-sidebar-gap));
+	}
+}
+
+/* CNI Blocks Outer+ のヒーローレイアウト。PCの2カラム画面だけに適用します。 */
+@media (min-width: 992px) {
+	/*
+	 * extend-main ヒーローがある時は、本文カラム自体を広げます。
+	 * Outer+ がすでに alignfull の場合でも、サイドバー手前まで実際に広がります。
+	 */
+	.main-section--col--two:has(.entry-body > .wp-block-cni-blocks-outer.cni-outer--hero.cni-outer--hero-layout-extend-main) {
+		width: calc(100% - var(--vk-width-col-2-sub) - var(--lightning-child-two-column-sidebar-gap, 20px));
+	}
+
+	/* 本文カラム内の通常幅制限を解除し、再計算済みのメインカラムいっぱいに表示します。 */
+	.main-section--col--two .entry-body > .wp-block-cni-blocks-outer.cni-outer--hero.cni-outer--hero-layout-extend-main {
+		width: 100%;
+		max-width: 100%;
+		margin-right: 0 !important;
+		margin-left: 0 !important;
+	}
+
+	/*
+	 * full-width の先頭ヒーローはPHPで2カラムコンテナの前へ出力します。
+	 * これによりヒーローの下から本文とサイドバーが通常どおり始まります。
+	 */
+	body.lightning-child-full-width-hero-layout .site-body {
+		padding-top: 0;
+	}
+
+	body.lightning-child-full-width-hero-layout .lightning-child-full-width-hero {
+		width: 100%;
+	}
+
+	body.lightning-child-full-width-hero-layout .lightning-child-full-width-hero > .wp-block-cni-blocks-outer.cni-outer--hero.cni-outer--hero-layout-full-width {
+		width: 100%;
+		max-width: none;
+		margin-right: 0 !important;
+		margin-left: 0 !important;
+	}
+
+	/* 全幅ヒーローと、その下の本文・サイドバーを視覚的に分離します。 */
+	body.lightning-child-full-width-hero-layout .site-body-container {
+		margin-top: 20px;
+	}
 }
 
 /* 場所別フォント設定。未指定の場所は本文フォントを継承します。 */
@@ -67,7 +117,7 @@ h6,
 	display: flex;
 	position: fixed;
 	z-index: 9000;
-	top: clamp(64px, var(--lightning-child-floating-contact-top, 15vh), calc(100vh - 240px));
+	top: clamp(64px, var(--lightning-child-floating-contact-top-current, var(--lightning-child-floating-contact-top-desktop, var(--lightning-child-floating-contact-top, 15vh))), calc(100vh - 240px));
 	flex-direction: column;
 	gap: 8px;
 	opacity: 1;
@@ -209,7 +259,7 @@ h6,
 }
 
 .admin-bar .lightning-child-floating-contact {
-	top: clamp(96px, calc(var(--lightning-child-floating-contact-top, 15vh) + 32px), calc(100vh - 240px));
+	top: clamp(96px, calc(var(--lightning-child-floating-contact-top-current, var(--lightning-child-floating-contact-top-desktop, var(--lightning-child-floating-contact-top, 15vh))) + 32px), calc(100vh - 240px));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -221,12 +271,13 @@ h6,
 
 @media (max-width: 767px) {
 	.lightning-child-floating-contact {
+		--lightning-child-floating-contact-top-current: var(--lightning-child-floating-contact-top-mobile, var(--lightning-child-floating-contact-top-desktop, var(--lightning-child-floating-contact-top, 15vh)));
 		--lightning-child-floating-contact-width: 38px;
 		--lightning-child-floating-contact-padding-block: 8px;
 		--lightning-child-floating-contact-padding-inline: 4px;
 		--lightning-child-floating-contact-font-size: 12px;
 		--lightning-child-floating-contact-icon-size: 14px;
-		top: clamp(64px, var(--lightning-child-floating-contact-top, 15vh), calc(100vh - 210px));
+		top: clamp(64px, var(--lightning-child-floating-contact-top-current), calc(100vh - 210px));
 	}
 
 	.lightning-child-floating-contact--small {
@@ -251,7 +302,7 @@ h6,
 	}
 
 	.admin-bar .lightning-child-floating-contact {
-		top: clamp(110px, calc(var(--lightning-child-floating-contact-top, 15vh) + 46px), calc(100vh - 210px));
+		top: clamp(110px, calc(var(--lightning-child-floating-contact-top-current) + 46px), calc(100vh - 210px));
 	}
 
 	.lightning-child-floating-contact--hide-mobile {

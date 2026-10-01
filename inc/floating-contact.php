@@ -76,6 +76,24 @@ function lightning_child_sanitize_floating_contact_top( $value ) {
 }
 
 /**
+ * Sanitize the optional smartphone-specific vertical position in vh.
+ *
+ * An empty value deliberately inherits the PC/tablet setting. This preserves
+ * the appearance of sites configured before separate smartphone positioning
+ * was introduced.
+ *
+ * @param mixed $value Submitted value.
+ * @return int|string
+ */
+function lightning_child_sanitize_floating_contact_mobile_top( $value ) {
+	if ( '' === $value || null === $value ) {
+		return '';
+	}
+
+	return lightning_child_sanitize_floating_contact_top( $value );
+}
+
+/**
  * Sanitize the distance from the screen edge.
  *
  * @param mixed $value Submitted value.
@@ -234,10 +252,19 @@ function lightning_child_customize_floating_contact( $wp_customize ) {
 
 	$number_settings = array(
 		'lightning_child_floating_contact_top'    => array(
-			'label'       => __( '上からの位置', 'cni-lightning-child' ),
-			'description' => __( '画面の高さに対する割合です。5〜80vhで指定します。', 'cni-lightning-child' ),
+			'label'       => __( 'PC・タブレット：上からの位置', 'cni-lightning-child' ),
+			'description' => __( '画面の高さに対する割合です。5〜80vhで指定します。既存サイトの設定はこの値を引き継ぎます。', 'cni-lightning-child' ),
 			'default'     => 15,
 			'sanitize'    => 'lightning_child_sanitize_floating_contact_top',
+			'min'         => 5,
+			'max'         => 80,
+			'step'        => 1,
+		),
+		'lightning_child_floating_contact_top_mobile' => array(
+			'label'       => __( 'スマートフォン：上からの位置', 'cni-lightning-child' ),
+			'description' => __( '画面の高さに対する割合です。5〜80vhで指定します。空欄の場合はPC・タブレットの設定を使用します。', 'cni-lightning-child' ),
+			'default'     => '',
+			'sanitize'    => 'lightning_child_sanitize_floating_contact_mobile_top',
 			'min'         => 5,
 			'max'         => 80,
 			'step'        => 1,
@@ -586,15 +613,20 @@ function lightning_child_add_floating_contact_css() {
 	$top    = lightning_child_sanitize_floating_contact_top(
 		get_theme_mod( 'lightning_child_floating_contact_top', 15 )
 	);
+	$mobile_top = lightning_child_sanitize_floating_contact_mobile_top(
+		get_theme_mod( 'lightning_child_floating_contact_top_mobile', '' )
+	);
 	$edge   = lightning_child_sanitize_floating_contact_edge(
 		get_theme_mod( 'lightning_child_floating_contact_edge', 0 )
 	);
 	$radius = lightning_child_sanitize_floating_contact_radius(
 		get_theme_mod( 'lightning_child_floating_contact_radius', 5 )
 	);
+	$mobile_top_css = '' === $mobile_top ? '' : sprintf( '--lightning-child-floating-contact-top-mobile:%dvh;', $mobile_top );
 	$css    = sprintf(
-		':root{--lightning-child-floating-contact-top:%1$dvh;--lightning-child-floating-contact-edge:%2$dpx;--lightning-child-floating-contact-radius:%3$dpx;--lightning-child-floating-contact-1-bg:%4$s;--lightning-child-floating-contact-1-text:%5$s;--lightning-child-floating-contact-2-bg:%6$s;--lightning-child-floating-contact-2-text:%7$s;}',
+		':root{--lightning-child-floating-contact-top:%1$dvh;--lightning-child-floating-contact-top-desktop:%1$dvh;%2$s--lightning-child-floating-contact-edge:%3$dpx;--lightning-child-floating-contact-radius:%4$dpx;--lightning-child-floating-contact-1-bg:%5$s;--lightning-child-floating-contact-1-text:%6$s;--lightning-child-floating-contact-2-bg:%7$s;--lightning-child-floating-contact-2-text:%8$s;}',
 		$top,
+		$mobile_top_css,
 		$edge,
 		$radius,
 		lightning_child_get_floating_contact_color( 'lightning_child_floating_contact_1_background_color', '#005b32' ),
