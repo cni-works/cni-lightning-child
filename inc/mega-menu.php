@@ -199,6 +199,7 @@ function lightning_child_customize_mega_menu( $wp_customize ) {
 		array(
 			'category_accent_color'  => __( 'カテゴリ型：アクセント・アイコン色', 'cni-lightning-child' ),
 			'category_icon_bg_color' => __( 'カテゴリ型：アイコン背景色', 'cni-lightning-child' ),
+			'category_intro_bg_color' => __( 'カテゴリ型：親紹介背景色', 'cni-lightning-child' ),
 			'category_heading_color' => __( 'カテゴリ型：見出し色', 'cni-lightning-child' ),
 			'category_link_color'    => __( 'カテゴリ型：リンク色', 'cni-lightning-child' ),
 			'category_border_color'  => __( 'カテゴリ型：区切り線色', 'cni-lightning-child' ),
@@ -497,6 +498,39 @@ function lightning_child_prepare_mega_menu_items( $items, $args ) {
 		}
 	}
 
+	/* Insert the category introduction as a normal menu item. This keeps the
+	 * Lightning walker intact and prevents desktop-only markup from leaking
+	 * into the mobile navigation. */
+	$category_intros = array();
+	foreach ( $items as $item ) {
+		if ( ! in_array( 'lightning-child-mega-menu-parent--categories', (array) $item->classes, true ) ) {
+			continue;
+		}
+
+		$intro                   = clone $item;
+		$intro->ID               = - absint( $item->ID );
+		$intro->db_id            = 0;
+		$intro->menu_item_parent = $item->ID;
+		$intro->title            = '';
+		$intro->url              = '';
+		$intro->target           = '';
+		$intro->attr_title       = '';
+		$intro->xfn              = '';
+		$intro->classes          = array( 'menu-item', 'lightning-child-mega-menu__intro' );
+		$category_intros[ $item->ID ] = $intro;
+	}
+
+	if ( $category_intros ) {
+		$items_with_intros = array();
+		foreach ( $items as $item ) {
+			$items_with_intros[] = $item;
+			if ( isset( $category_intros[ $item->ID ] ) ) {
+				$items_with_intros[] = $category_intros[ $item->ID ];
+			}
+		}
+		$items = $items_with_intros;
+	}
+
 	return $items;
 }
 add_filter( 'wp_nav_menu_objects', 'lightning_child_prepare_mega_menu_items', 20, 2 );
@@ -552,6 +586,34 @@ function lightning_child_get_mega_menu_item_title( $item, $fallback ) {
  */
 function lightning_child_render_mega_menu_item( $item_output, $item, $depth, $args ) {
 	if (
+		1 === (int) $depth
+		&& lightning_child_is_mega_menu_enabled()
+		&& lightning_child_is_header_global_menu( $args )
+		&& in_array( 'lightning-child-mega-menu__intro', (array) $item->classes, true )
+	) {
+		$parent_id  = absint( $item->menu_item_parent );
+		$eyebrow    = get_post_meta( $parent_id, '_lightning_child_mega_menu_eyebrow', true );
+		$description = get_post_meta( $parent_id, '_lightning_child_mega_menu_description', true );
+		$cta_text   = get_post_meta( $parent_id, '_lightning_child_mega_menu_cta_text', true );
+		$cta_url    = get_post_meta( $parent_id, '_lightning_child_mega_menu_cta_url', true );
+		$title      = get_post_field( 'post_title', $parent_id );
+
+		return ( $eyebrow ? '<span class="lightning-child-mega-menu__intro-eyebrow">' . esc_html( $eyebrow ) . '</span>' : '' )
+			. '<span class="lightning-child-mega-menu__intro-title">' . esc_html( $title ) . '</span>'
+			. ( $description ? '<p>' . esc_html( $description ) . '</p>' : '' )
+			. ( $cta_text && $cta_url ? '<a class="lightning-child-mega-menu__intro-cta" href="' . esc_url( $cta_url ) . '">' . esc_html( $cta_text ) . ' <span aria-hidden="true">→</span></a>' : '' );
+	}
+
+	if (
+		0 === (int) $depth
+		&& lightning_child_is_mega_menu_enabled()
+		&& lightning_child_is_header_global_menu( $args )
+		&& in_array( 'lightning-child-mega-menu-parent', (array) $item->classes, true )
+	) {
+		return preg_replace( '/<\\/a>(?!.*<\\/a>)/is', '<span class="lightning-child-mega-menu__panel-pointer" aria-hidden="true"></span></a>', $item_output, 1 );
+	}
+
+	if (
 		1 !== (int) $depth
 		|| ! lightning_child_is_mega_menu_enabled()
 		|| ! lightning_child_is_header_global_menu( $args )
@@ -606,15 +668,6 @@ function lightning_child_render_mega_menu_item( $item_output, $item, $depth, $ar
 	return $matches[1] . $content . $matches[3];
 }
 add_filter( 'walker_nav_menu_start_el', 'lightning_child_render_mega_menu_item', 20, 4 );
-
-class Lightning_Child_Mega_Menu_Walker extends Walker_Nav_Menu {
-	private $category_parent = null;
-	public function display_element( $element, &$children_elements, $max_depth, $depth, $args, &$output ) { $is_category = 0 === (int) $depth && in_array( 'lightning-child-mega-menu-parent--categories', (array) $element->classes, true ); if ( $is_category ) { $this->category_parent = $element; } parent::display_element( $element, $children_elements, $max_depth, $depth, $args, $output ); if ( $is_category ) { $this->category_parent = null; } }
-	public function start_lvl( &$output, $depth = 0, $args = null ) { parent::start_lvl( $output, $depth, $args ); if ( 0 !== (int) $depth || ! $this->category_parent ) { return; } $id = $this->category_parent->ID; $eyebrow = get_post_meta( $id, '_lightning_child_mega_menu_eyebrow', true ); $description = get_post_meta( $id, '_lightning_child_mega_menu_description', true ); $cta_text = get_post_meta( $id, '_lightning_child_mega_menu_cta_text', true ); $cta_url = get_post_meta( $id, '_lightning_child_mega_menu_cta_url', true ); $output .= '<li class="lightning-child-mega-menu__intro">' . ( $eyebrow ? '<span class="lightning-child-mega-menu__intro-eyebrow">' . esc_html( $eyebrow ) . '</span>' : '' ) . '<span class="lightning-child-mega-menu__intro-title">' . esc_html( $this->category_parent->title ) . '</span>' . ( $description ? '<p>' . esc_html( $description ) . '</p>' : '' ) . ( $cta_text && $cta_url ? '<a class="lightning-child-mega-menu__intro-cta" href="' . esc_url( $cta_url ) . '">' . esc_html( $cta_text ) . ' <span aria-hidden="true">→</span></a>' : '' ) . '</li>'; }
-}
-
-function lightning_child_use_mega_menu_walker( $args ) { if ( lightning_child_is_mega_menu_enabled() && lightning_child_is_header_global_menu( (object) $args ) && empty( $args['walker'] ) ) { $args['walker'] = new Lightning_Child_Mega_Menu_Walker(); } return $args; }
-add_filter( 'wp_nav_menu_args', 'lightning_child_use_mega_menu_walker', 20 );
 
 /**
  * Add state classes used by the mega menu stylesheet.
@@ -687,7 +740,7 @@ function lightning_child_enqueue_mega_menu_styles() {
 		get_theme_mod( 'lightning_child_mega_menu_width', 100 )
 	);
 	$category_colors = array();
-	foreach ( array( 'accent', 'icon_bg', 'heading', 'link', 'border' ) as $color ) {
+	foreach ( array( 'accent', 'icon_bg', 'intro_bg', 'heading', 'link', 'border' ) as $color ) {
 		$category_colors[ $color ] = lightning_child_sanitize_mega_menu_optional_color(
 			get_theme_mod( 'lightning_child_mega_menu_category_' . $color . '_color', '' )
 		);
@@ -703,6 +756,7 @@ function lightning_child_enqueue_mega_menu_styles() {
 		. '--lightning-child-mega-menu-width:' . $menu_width . '%;'
 		. '--lightning-child-mega-category-accent:' . ( $category_colors['accent'] ? $category_colors['accent'] : 'var(--vk-color-primary, #337ab7)' ) . ';'
 		. '--lightning-child-mega-category-icon-bg:' . ( $category_colors['icon_bg'] ? $category_colors['icon_bg'] : 'color-mix(in srgb, var(--lightning-child-mega-category-accent) 12%, transparent)' ) . ';'
+		. '--lightning-child-mega-category-intro-bg:' . ( $category_colors['intro_bg'] ? $category_colors['intro_bg'] : 'color-mix(in srgb, var(--lightning-child-mega-menu-background, #fff) 88%, #f4f6f7)' ) . ';'
 		. '--lightning-child-mega-category-heading:' . ( $category_colors['heading'] ? $category_colors['heading'] : '#111111' ) . ';'
 		. '--lightning-child-mega-category-link:' . ( $category_colors['link'] ? $category_colors['link'] : '#1f2933' ) . ';'
 		. '--lightning-child-mega-category-border:' . ( $category_colors['border'] ? $category_colors['border'] : '#e2e8ed' ) . ';'

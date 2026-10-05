@@ -48,9 +48,21 @@
 
 	/* Origin III's active underline would use the header container as its width reference here. */
 	.lightning-child-mega-menu-enabled .global-nav-list > .lightning-child-mega-menu-parent::before {
-		display: none;
+		display: none !important;
 		content: none;
+		content: none !important;
 	}
+
+	.lightning-child-mega-menu-enabled .global-nav-list > .lightning-child-mega-menu-parent::after,
+	.lightning-child-mega-menu-enabled .global-nav-list > .lightning-child-mega-menu-parent > a::before,
+	.lightning-child-mega-menu-enabled .global-nav-list > .lightning-child-mega-menu-parent > a::after {
+		display: none !important;
+		content: none !important;
+	}
+
+	.lightning-child-mega-menu-enabled .global-nav-list > .lightning-child-mega-menu-parent > a { position: relative; }
+	.lightning-child-mega-menu-enabled .lightning-child-mega-menu__panel-pointer { position:absolute; z-index:2; left:50%; bottom:-11px; width:18px; height:18px; background:var(--lightning-child-mega-menu-background, #fff); border-top:1px solid var(--vk-color-border, #e5e5e5); border-left:1px solid var(--vk-color-border, #e5e5e5); opacity:0; pointer-events:none; transform:translateX(-50%) rotate(45deg); transition:opacity 160ms ease-out; }
+	.lightning-child-mega-menu-enabled .global-nav-list > .lightning-child-mega-menu-parent:hover .lightning-child-mega-menu__panel-pointer, .lightning-child-mega-menu-enabled .global-nav-list > .lightning-child-mega-menu-parent:focus-within .lightning-child-mega-menu__panel-pointer, .lightning-child-mega-menu-enabled .global-nav-list > .lightning-child-mega-menu-parent.is-mega-menu-open .lightning-child-mega-menu__panel-pointer { opacity:1; }
 
 	.lightning-child-mega-menu-enabled .global-nav-list > .lightning-child-mega-menu-parent > .sub-menu {
 		display: grid;
@@ -62,7 +74,7 @@
 		transform: translateX(-50%);
 		max-height: 80vh;
 		margin: 0;
-		padding: 32px;
+		padding: 20px 32px;
 		overflow-x: hidden;
 		overflow-y: auto;
 		box-sizing: border-box;
@@ -344,14 +356,15 @@
 		align-items: start;
 	}
 
-	.lightning-child-mega-menu__intro { padding: 24px 28px; background: color-mix(in srgb, var(--lightning-child-mega-menu-background, #fff) 88%, #f4f6f7); }
+	.lightning-child-mega-menu-enabled .lightning-child-mega-menu-parent--categories > .sub-menu > .lightning-child-mega-menu__intro { align-self:stretch; margin:-20px -24px -20px -32px; padding:44px 28px; overflow:visible !important; background:var(--lightning-child-mega-category-intro-bg); }
 	.lightning-child-mega-menu__intro-eyebrow { display:block; margin-bottom:12px; color:var(--lightning-child-mega-category-accent, var(--vk-color-primary)); font-size:13px; font-weight:700; letter-spacing:.12em; }
 	.lightning-child-mega-menu__intro-title { display:block; color:var(--lightning-child-mega-category-heading, #111); font-size:clamp(25px, 2vw, 36px); font-weight:700; line-height:1.3; }
 	.lightning-child-mega-menu__intro p { margin:16px 0; color:var(--lightning-child-mega-category-link, #1f2933); line-height:1.7; }
-	.lightning-child-mega-menu__intro-cta { display:inline-flex; gap:10px; align-items:center; padding:10px 18px; border:1px solid var(--lightning-child-mega-category-accent, var(--vk-color-primary)); border-radius:999px; color:var(--lightning-child-mega-category-accent, var(--vk-color-primary)) !important; }
+	.lightning-child-mega-menu-enabled .global-nav-list .lightning-child-mega-menu__intro-cta { display:flex; box-sizing:border-box; align-items:center; justify-content:center; gap:10px; width:100%; min-height:48px; padding:10px 18px !important; overflow:visible; border:1px solid var(--lightning-child-mega-category-accent, var(--vk-color-primary)); border-radius:999px; color:var(--lightning-child-mega-category-accent, var(--vk-color-primary)) !important; line-height:1.4; text-align:center; text-decoration:none; white-space:nowrap; }
+	.lightning-child-mega-menu-enabled .global-nav-list .lightning-child-mega-menu__intro-cta:hover, .lightning-child-mega-menu-enabled .global-nav-list .lightning-child-mega-menu__intro-cta:focus-visible, .lightning-child-mega-menu-enabled .global-nav-list .lightning-child-mega-menu__intro-cta:hover span, .lightning-child-mega-menu-enabled .global-nav-list .lightning-child-mega-menu__intro-cta:focus-visible span { color:#ffffff !important; background:var(--lightning-child-mega-category-accent, var(--vk-color-primary)); }
 
 	.lightning-child-mega-menu-layout-categories .lightning-child-mega-menu-parent > .sub-menu > .lightning-child-mega-menu-item {
-		padding: 20px 28px;
+		padding: 12px 28px 20px;
 		border-left: 1px solid var(--lightning-child-mega-category-border, #e2e8ed);
 	}
 
@@ -372,12 +385,13 @@
 		place-items: center;
 		width: 54px;
 		height: 54px;
-		margin: 0 auto 14px;
+		margin: 0 auto 8px;
 		border-radius: 50%;
 		background: var(--lightning-child-mega-category-icon-bg, color-mix(in srgb, var(--lightning-child-mega-category-accent, var(--vk-color-primary, #337ab7)) 12%, transparent));
 		color: var(--lightning-child-mega-category-accent, var(--vk-color-primary, #337ab7));
 		font-size: 24px;
 	}
+	.lightning-child-mega-menu-layout-categories .lightning-child-mega-menu__category-icon > i { margin-right:0 !important; }
 
 	.lightning-child-mega-menu-layout-categories .lightning-child-mega-menu__category-icon + span {
 		display: block;
@@ -392,8 +406,11 @@
 		display: block !important;
 		position: static !important;
 		width: auto !important;
+		height: auto !important;
+		max-height: none !important;
 		margin: 0 !important;
 		padding: 0 !important;
+		overflow: visible !important;
 		border: 0 !important;
 		box-shadow: none !important;
 		background: transparent !important;
@@ -406,7 +423,7 @@
 		display: flex !important;
 		justify-content: space-between;
 		gap: 12px;
-		padding: 9px 0 !important;
+		padding: 9px 8px 9px 0 !important;
 		border-top: 1px solid var(--lightning-child-mega-category-border, #e2e8ed);
 		color: var(--lightning-child-mega-category-link, #1f2933) !important;
 		background: transparent !important;
@@ -415,7 +432,9 @@
 	.lightning-child-mega-menu-layout-categories .lightning-child-mega-menu-grandchild > a::after {
 		content: '→';
 		color: var(--lightning-child-mega-category-accent, var(--vk-color-primary, #337ab7));
+		transition: transform 160ms ease-out;
 	}
+	.lightning-child-mega-menu-layout-categories .lightning-child-mega-menu-grandchild > a:hover::after, .lightning-child-mega-menu-layout-categories .lightning-child-mega-menu-grandchild > a:focus-visible::after, .lightning-child-mega-menu-parent--categories .lightning-child-mega-menu-grandchild > a:hover::after, .lightning-child-mega-menu-parent--categories .lightning-child-mega-menu-grandchild > a:focus-visible::after { transform:translateX(4px); }
 
 	/* Per-parent category override uses the same presentation even when the
 	 * shared Customizer layout remains cards or links. */
