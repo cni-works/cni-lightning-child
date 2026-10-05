@@ -1,0 +1,19 @@
+/* Keep the editor account menu available without letting a long user name cover editor controls. */
+.block-editor-page #wpadminbar #wp-admin-bar-my-account > .ab-item {
+	display: flex !important;
+	align-items: center;
+	justify-content: center;
+	min-width: 44px;
+	padding-right: 8px;
+	padding-left: 8px;
+	font-size: 0 !important;
+}
+
+.block-editor-page #wpadminbar #wp-admin-bar-my-account > .ab-item .display-name {
+	display: none !important;
+}
+
+.block-editor-page #wpadminbar #wp-admin-bar-my-account > .ab-item .avatar {
+	float: none;
+	margin: 0 !important;
+}

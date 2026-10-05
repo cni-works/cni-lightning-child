@@ -75,6 +75,7 @@ const documentEvents = {};
 let parentQueries = 0;
 
 panel.querySelectorAll = () => [];
+link.querySelectorAll = () => [];
 parent.querySelector = ( selector ) => ':scope > .sub-menu' === selector ? panel : link;
 
 const document = {
@@ -126,6 +127,12 @@ desktopMedia.matches = true;
 mediaListeners[ 0 ]();
 assert( 1 === parentQueries, 'Desktop fine-pointer conditions must initialize the mega menu.' );
 
+parent.dispatch( 'pointerenter' );
+assert( ! parent.classList.contains( 'is-mega-menu-open' ), 'The parent list item itself must not be a hover trigger.' );
+
+link.dispatch( 'pointerenter' );
+assert( parent.classList.contains( 'is-mega-menu-open' ), 'The direct parent link must open the desktop mega menu after its hover delay.' );
+
 parent.dispatch( 'focusin' );
 assert( parent.classList.contains( 'is-mega-menu-open' ), 'Focus must open the desktop mega menu.' );
 
@@ -140,10 +147,30 @@ desktopMedia.matches = false;
 mediaListeners[ 0 ]();
 assert( ! parent.classList.contains( 'is-mega-menu-open' ), 'Leaving desktop conditions must remove the custom open state.' );
 assert( 0 === ( parent.listeners.get( 'focusin' ) || [] ).length, 'Leaving desktop conditions must remove custom event listeners.' );
+assert( 0 === ( link.listeners.get( 'pointerenter' ) || [] ).length, 'Leaving desktop conditions must remove direct-link hover listeners.' );
 
 assert( ! scriptSource.includes( 'lightningButton.remove' ), 'The script must preserve Lightning accordion controls.' );
+assert( scriptSource.includes( 'const hoverTargets = triggerContents.length ? triggerContents : [ trigger ];' ), 'Visible menu text must be used as the hover target when Lightning provides it.' );
 assert( ! scriptSource.includes( "classList.remove( 'acc-child-open'" ), 'The script must preserve Lightning accordion state classes.' );
 assert( ! cssSource.includes( 'lightning-child-mega-menu-parent:hover > .sub-menu' ), 'Hover CSS must not bypass the JavaScript open state.' );
 assert( ! cssSource.includes( 'lightning-child-mega-menu-parent:focus-within > .sub-menu' ), 'Focus-within CSS must not reopen a menu closed with Escape.' );
+
+const closedPanelRule = cssSource.match(
+	/\.lightning-child-mega-menu-parent > \.sub-menu \{([\s\S]*?)\n\t\}/
+);
+const openPanelRule = cssSource.match(
+	/\.lightning-child-mega-menu-parent\.is-mega-menu-open > \.sub-menu \{([\s\S]*?)\n\t\}/
+);
+assert( closedPanelRule, 'The closed mega menu panel rule must exist.' );
+assert( openPanelRule, 'The open mega menu panel rule must exist.' );
+assert( closedPanelRule[ 1 ].includes( 'border: 1px solid transparent;' ), 'The closed panel must retain a transparent one-pixel border to prevent size changes.' );
+assert( closedPanelRule[ 1 ].includes( 'box-shadow: none;' ), 'The closed panel must not paint a shadow.' );
+assert( openPanelRule[ 1 ].includes( 'border-color: var(--vk-color-border, #e5e5e5);' ), 'The panel border color must be restored only while open.' );
+assert( openPanelRule[ 1 ].includes( 'box-shadow: 0 14px 32px rgba(0, 0, 0, 0.14);' ), 'The panel shadow must be restored only while open.' );
+assert(
+	cssSource.includes( '.lightning-child-mega-menu-parent::before {' )
+		&& cssSource.includes( 'content: none;' ),
+	'Origin III active underlines must be disabled when their containing mega-menu item becomes static.'
+);
 
 console.log( 'Mega menu JavaScript tests passed.' );
