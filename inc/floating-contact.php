@@ -579,7 +579,10 @@ function lightning_child_render_floating_contact() {
 		'lightning-child-floating-contact--' . $size,
 	);
 
-	if ( 'always' === $mode ) {
+	if ( 'scroll' === $mode ) {
+		// Hide before the deferred footer script runs to prevent an initial flash.
+		$classes[] = 'is-scroll-controlled';
+	} else {
 		$classes[] = 'is-visible';
 	}
 	if ( $hide_mobile ) {

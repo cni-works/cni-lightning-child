@@ -47,6 +47,11 @@ floating_contact_assert(
 		&& false !== strpos( $source, '--lightning-child-floating-contact-top-mobile' ),
 	'The inline CSS must expose separate desktop and smartphone position variables.'
 );
+floating_contact_assert(
+	false !== strpos( $source, "if ( 'scroll' === \$mode )" )
+		&& false !== strpos( $source, "\$classes[] = 'is-scroll-controlled';" ),
+	'Scroll-triggered buttons must be hidden in the initial HTML to prevent a flash before JavaScript runs.'
+);
 
 $style = file_get_contents( dirname( __DIR__ ) . '/style.css' );
 floating_contact_assert(
