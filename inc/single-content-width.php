@@ -100,6 +100,47 @@ function lightning_child_get_two_column_width_choices() {
 }
 
 /**
+ * Sanitize the two-column sidebar gap mode.
+ *
+ * @param mixed $value Submitted value.
+ * @return string
+ */
+function lightning_child_sanitize_two_column_sidebar_gap_mode( $value ) {
+	$value   = is_string( $value ) ? $value : '';
+	$choices = array( 'lightning', '20', '32', '48', '64', 'custom' );
+
+	return in_array( $value, $choices, true ) ? $value : 'lightning';
+}
+
+/**
+ * Sanitize a custom two-column sidebar gap.
+ *
+ * @param mixed $value Submitted value.
+ * @return int
+ */
+function lightning_child_sanitize_two_column_sidebar_gap( $value ) {
+	$value = absint( $value );
+
+	return min( 200, $value );
+}
+
+/**
+ * Return choices shown by the two-column sidebar gap control.
+ *
+ * @return array<string,string>
+ */
+function lightning_child_get_two_column_sidebar_gap_choices() {
+	return array(
+		'lightning' => __( 'Lightning標準（自動）', 'cni-lightning-child' ),
+		'20'        => __( '狭め（20px）', 'cni-lightning-child' ),
+		'32'        => __( 'やや狭め（32px）', 'cni-lightning-child' ),
+		'48'        => __( '標準（48px）', 'cni-lightning-child' ),
+		'64'        => __( '広め（64px）', 'cni-lightning-child' ),
+		'custom'    => __( 'カスタム指定', 'cni-lightning-child' ),
+	);
+}
+
+/**
  * Return post types supported by the single content width setting.
  *
  * Pages and attachments are intentionally excluded because their block layouts
@@ -171,7 +212,7 @@ function lightning_child_customize_single_content_width( $wp_customize ) {
 		'lightning_child_single_content_width',
 		array(
 			'title'       => __( '記事レイアウト幅設定', 'cni-lightning-child' ),
-			'description' => __( '1カラムの個別記事本文幅と、本文・サイドバーを含む2カラム全体の最大幅を設定します。', 'cni-lightning-child' ),
+			'description' => __( '1カラムの個別記事本文幅、本文・サイドバーを含む2カラム全体の最大幅、および2カラム時の間隔を設定します。', 'cni-lightning-child' ),
 			'panel'       => 'lightning_layout',
 			'priority'    => 30,
 		)
@@ -252,6 +293,46 @@ function lightning_child_customize_single_content_width( $wp_customize ) {
 				'min'  => 1080,
 				'max'  => 1920,
 				'step' => 10,
+			),
+			'active_callback' => 'lightning_child_is_single_content_custom_width_control_active',
+		)
+	);
+
+	$wp_customize->add_setting(
+		'lightning_child_two_column_sidebar_gap',
+		array(
+			'default'           => 'lightning',
+			'sanitize_callback' => 'lightning_child_sanitize_two_column_sidebar_gap_mode',
+		)
+	);
+	$wp_customize->add_control(
+		'lightning_child_two_column_sidebar_gap',
+		array(
+			'label'       => __( '2カラムのサイドバーとの間隔', 'cni-lightning-child' ),
+			'description' => __( '間隔を狭くした分だけ本文カラムを広げます。サイドバー幅は変わりません。', 'cni-lightning-child' ),
+			'section'     => 'lightning_child_single_content_width',
+			'type'        => 'select',
+			'choices'     => lightning_child_get_two_column_sidebar_gap_choices(),
+		)
+	);
+
+	$wp_customize->add_setting(
+		'lightning_child_two_column_sidebar_gap_custom_width',
+		array(
+			'default'           => 20,
+			'sanitize_callback' => 'lightning_child_sanitize_two_column_sidebar_gap',
+		)
+	);
+	$wp_customize->add_control(
+		'lightning_child_two_column_sidebar_gap_custom_width',
+		array(
+			'label'           => __( 'サイドバーとのカスタム間隔（px）', 'cni-lightning-child' ),
+			'section'         => 'lightning_child_single_content_width',
+			'type'            => 'number',
+			'input_attrs'     => array(
+				'min'  => 0,
+				'max'  => 200,
+				'step' => 1,
 			),
 			'active_callback' => 'lightning_child_is_single_content_custom_width_control_active',
 		)
@@ -423,6 +504,31 @@ function lightning_child_get_two_column_width() {
 }
 
 /**
+ * Resolve the gap between the main content and sidebar.
+ *
+ * A zero value preserves Lightning's proportional default layout.
+ *
+ * @return int
+ */
+function lightning_child_get_two_column_sidebar_gap() {
+	$mode = lightning_child_sanitize_two_column_sidebar_gap_mode(
+		get_theme_mod( 'lightning_child_two_column_sidebar_gap', 'lightning' )
+	);
+
+	if ( 'lightning' === $mode ) {
+		return 0;
+	}
+
+	if ( 'custom' === $mode ) {
+		return lightning_child_sanitize_two_column_sidebar_gap(
+			get_theme_mod( 'lightning_child_two_column_sidebar_gap_custom_width', 20 )
+		);
+	}
+
+	return lightning_child_sanitize_two_column_sidebar_gap( $mode );
+}
+
+/**
  * Determine whether the current screen uses Lightning's two-column layout.
  *
  * @return bool
@@ -441,8 +547,16 @@ function lightning_child_is_two_column_layout() {
  * @return string[]
  */
 function lightning_child_add_two_column_width_body_class( $classes ) {
-	if ( lightning_child_is_two_column_layout() && 0 !== lightning_child_get_two_column_width() ) {
+	if ( ! lightning_child_is_two_column_layout() ) {
+		return $classes;
+	}
+
+	if ( 0 !== lightning_child_get_two_column_width() ) {
 		$classes[] = 'lightning-child-two-column-width';
+	}
+
+	if ( 0 !== lightning_child_get_two_column_sidebar_gap() ) {
+		$classes[] = 'lightning-child-two-column-sidebar-gap';
 	}
 
 	return $classes;
@@ -460,14 +574,25 @@ function lightning_child_enqueue_two_column_width_style() {
 	}
 
 	$width = lightning_child_get_two_column_width();
-	if ( 0 === $width ) {
+	$gap   = lightning_child_get_two_column_sidebar_gap();
+	$style = '';
+
+	if ( 0 !== $width ) {
+		$style .= ':root{--lightning-child-two-column-width:' . absint( $width ) . 'px;'
+			. '--lightning-child-two-column-sidebar-width:' . absint( round( $width * 0.27 ) ) . 'px;}';
+	}
+
+	if ( 0 !== $gap ) {
+		$style .= ':root{--lightning-child-two-column-sidebar-gap:' . absint( $gap ) . 'px;}';
+	}
+
+	if ( '' === $style ) {
 		return;
 	}
 
 	wp_add_inline_style(
 		'lightning-theme-style',
-		':root{--lightning-child-two-column-width:' . absint( $width ) . 'px;'
-		. '--lightning-child-two-column-sidebar-width:' . absint( round( $width * 0.27 ) ) . 'px;}'
+		$style
 	);
 }
 add_action( 'wp_enqueue_scripts', 'lightning_child_enqueue_two_column_width_style', 30 );

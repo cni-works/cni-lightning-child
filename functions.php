@@ -65,7 +65,8 @@ add_action( 'wp_enqueue_scripts', 'lightning_child_enqueue_stylesheet', 15 );
  * update-sensitive integrations. Individual features can also be stopped with
  * LIGHTNING_CHILD_DISABLE_HEADER_ENHANCEMENTS,
  * LIGHTNING_CHILD_DISABLE_MOBILE_FIXED_NAV,
- * LIGHTNING_CHILD_DISABLE_BLOCK_TEMPLATE_PARTS, or
+ * LIGHTNING_CHILD_DISABLE_BLOCK_TEMPLATE_PARTS,
+ * LIGHTNING_CHILD_DISABLE_HERO_LAYOUT, or
  * LIGHTNING_CHILD_DISABLE_ARCHIVE_LAYOUT, or
  * LIGHTNING_CHILD_DISABLE_PAGE_HEADER.
  *
@@ -77,6 +78,7 @@ function lightning_child_is_feature_enabled( $feature ) {
 		'header_enhancements'  => 'LIGHTNING_CHILD_DISABLE_HEADER_ENHANCEMENTS',
 		'mobile_fixed_nav'     => 'LIGHTNING_CHILD_DISABLE_MOBILE_FIXED_NAV',
 		'block_template_parts' => 'LIGHTNING_CHILD_DISABLE_BLOCK_TEMPLATE_PARTS',
+		'hero_layout'          => 'LIGHTNING_CHILD_DISABLE_HERO_LAYOUT',
 		'archive_layout'       => 'LIGHTNING_CHILD_DISABLE_ARCHIVE_LAYOUT',
 		'page_header'          => 'LIGHTNING_CHILD_DISABLE_PAGE_HEADER',
 	);
@@ -221,9 +223,13 @@ require_once get_stylesheet_directory() . '/inc/page-visibility.php';
 require_once get_stylesheet_directory() . '/inc/footer-settings.php';
 require_once get_stylesheet_directory() . '/inc/post-display-settings.php';
 require_once get_stylesheet_directory() . '/inc/single-content-width.php';
+if ( lightning_child_is_feature_enabled( 'hero_layout' ) ) {
+	require_once get_stylesheet_directory() . '/inc/hero-layout.php';
+}
 require_once get_stylesheet_directory() . '/inc/page-top-settings.php';
 require_once get_stylesheet_directory() . '/inc/floating-contact.php';
 require_once get_stylesheet_directory() . '/inc/font-settings.php';
+require_once get_stylesheet_directory() . '/inc/admin-toolbar.php';
 
 if ( lightning_child_is_feature_enabled( 'page_header' ) ) {
 	require_once get_stylesheet_directory() . '/inc/page-header-settings.php';

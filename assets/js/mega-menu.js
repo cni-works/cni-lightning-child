@@ -25,11 +25,21 @@
 
 				parents.forEach( function( parent, parentIndex ) {
 					const panel = parent.querySelector( ':scope > .sub-menu' );
+					const trigger = parent.querySelector( ':scope > a' );
+					const triggerContents = trigger
+						? Array.from(
+							trigger.querySelectorAll(
+								':scope > .global-nav-name, :scope > .global-nav-description'
+							)
+						)
+						: [];
+					const hoverTargets = triggerContents.length ? triggerContents : [ trigger ];
 					const childMenus = [];
 					let closeTimer = 0;
+					let openTimer = 0;
 					let suppressFocusOpen = false;
 
-					if ( ! panel ) {
+					if ( ! panel || ! trigger ) {
 						return;
 					}
 
@@ -139,7 +149,13 @@
 						closeTimer = 0;
 					};
 
+					const cancelOpen = function() {
+						window.clearTimeout( openTimer );
+						openTimer = 0;
+					};
+
 					const openMenu = function() {
+						cancelOpen();
 						cancelClose();
 						parents.forEach( function( otherParent ) {
 							if ( otherParent !== parent ) {
@@ -149,10 +165,23 @@
 						parent.classList.add( 'is-mega-menu-open' );
 					};
 
+					const scheduleOpen = function() {
+						cancelClose();
+						cancelOpen();
+						openTimer = window.setTimeout( openMenu, 120 );
+					};
+
 					const scheduleClose = function() {
+						cancelOpen();
 						cancelClose();
 						closeTimer = window.setTimeout( function() {
-							if ( ! parent.matches( ':hover' ) && ! parent.contains( document.activeElement ) ) {
+							if (
+								! hoverTargets.some( function( hoverTarget ) {
+									return hoverTarget.matches( ':hover' );
+								} )
+								&& ! panel.matches( ':hover' )
+								&& ! parent.contains( document.activeElement )
+							) {
 								parent.classList.remove( 'is-mega-menu-open' );
 								closeChildMenus();
 							}
@@ -191,8 +220,10 @@
 						suppressFocusOpen = false;
 					};
 
-					parent.addEventListener( 'pointerenter', openMenu );
-					parent.addEventListener( 'pointerleave', scheduleClose );
+					hoverTargets.forEach( function( hoverTarget ) {
+						hoverTarget.addEventListener( 'pointerenter', scheduleOpen );
+						hoverTarget.addEventListener( 'pointerleave', scheduleClose );
+					} );
 					panel.addEventListener( 'pointerenter', openMenu );
 					panel.addEventListener( 'pointerleave', scheduleClose );
 					parent.addEventListener( 'focusin', onFocusIn );
@@ -200,10 +231,13 @@
 					parent.addEventListener( 'keydown', onKeydown );
 
 					cleanups.push( function() {
+						cancelOpen();
 						cancelClose();
 						parent.classList.remove( 'is-mega-menu-open' );
-						parent.removeEventListener( 'pointerenter', openMenu );
-						parent.removeEventListener( 'pointerleave', scheduleClose );
+						hoverTargets.forEach( function( hoverTarget ) {
+							hoverTarget.removeEventListener( 'pointerenter', scheduleOpen );
+							hoverTarget.removeEventListener( 'pointerleave', scheduleClose );
+						} );
 						panel.removeEventListener( 'pointerenter', openMenu );
 						panel.removeEventListener( 'pointerleave', scheduleClose );
 						parent.removeEventListener( 'focusin', onFocusIn );
